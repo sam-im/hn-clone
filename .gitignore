@@ -1,0 +1,16 @@
+# Secrets
+.env
+
+# Common Lisp
+/frontend/**/*.abcl
+/frontend/**/*.fasl
+/frontend/**/*.dx32fsl
+/frontend/**/*.dx64fsl
+/frontend/**/*.lx32fsl
+/frontend/**/*.lx64fsl
+/frontend/**/*.x86f
+/frontend/**/*~
+/frontend/**/.#*
+
+# Rust
+backend/target/

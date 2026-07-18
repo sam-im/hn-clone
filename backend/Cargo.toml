@@ -1,0 +1,14 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }      # async runtime
+axum = "0.8.9"                                      # web server
+serde = "1.0.228"                                   # json
+tracing = "0.1.44"                                  # logging
+tracing-subscriber = "0.3.23"                       # logging
+tokio-postgres = "0.7.18"                           # database connection
+deadpool-postgres = "0.14.1"                        # database connection pool
+argon2 = { version = "0.5.3", features = ["std"] }  # password hashing
