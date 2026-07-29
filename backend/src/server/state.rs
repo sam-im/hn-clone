@@ -4,12 +4,12 @@ use crate::{client::db::Database, config::Config};
 
 /// Use the slots of this struct for cheap-to-clone objects, e.g. Arc<T>.
 #[derive(Clone)]
-pub struct State {
-    config: Arc<Config>,
-    db: Database,
+pub struct AppState {
+    pub config: Arc<Config>,
+    pub db: Database,
 }
 
-impl State {
+impl AppState {
     pub fn new(config: &Arc<Config>, db: Database) -> Self {
         Self {
             config: config.clone(),
