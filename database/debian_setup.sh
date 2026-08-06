@@ -12,6 +12,12 @@ apt install -y postgresql
 su - postgres -c "psql -c \"CREATE USER $db_user WITH PASSWORD '$db_pass';\""
 su - postgres -c "psql -c \"CREATE DATABASE $db_name;\""
 su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name TO $db_user;\""
+# TODO: test the following lines
+su - postgres -c "psql -d $db_name -c \"GRANT USAGE, CREATE ON SCHEMA public TO $db_user;\""
+su - postgres -c "psql -d $db_name -c \"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO $db_user;\""
+su - postgres -c "psql -d $db_name -c \"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO $db_user;\""
+su - postgres -c "psql -d $db_name -c \"ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO $db_user;\""
+su - postgres -c "psql -d $db_name -c \"ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO $db_user;\""
 
 PG_VERSION=$(psql --version | grep -oE '[0-9]+' | head -1)
 PG_CONF_DIR="/etc/postgresql/$PG_VERSION/main"
