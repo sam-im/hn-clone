@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS _user (
     _id             SERIAL          PRIMARY KEY,
     _username       VARCHAR(36)     UNIQUE NOT NULL,
     _password_hash  VARCHAR(128)    NOT NULL,                   -- Argon2 PHC string is 97 chars w/default config
-    _public_key     TEXT            NOT NULL,
+    _about          VARCHAR(256),
+    _public_key     TEXT,
     _created_at     TIMESTAMPTZ     NOT NULL DEFAULT now (),
     _modified_at    TIMESTAMPTZ     NOT NULL DEFAULT now ()
 );
