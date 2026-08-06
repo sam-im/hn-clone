@@ -1,10 +1,9 @@
-use crate::config::Config;
+use crate::{config::Config, error::AppError};
 
 use std::error::Error;
 
 use deadpool_postgres::{Manager, ManagerConfig, Object, Pool, RecyclingMethod};
 use tokio_postgres::NoTls;
-use tracing::{debug, error};
 
 #[derive(Clone)]
 pub struct Database {
@@ -27,24 +26,7 @@ impl Database {
         Ok(Self { inner: pool })
     }
 
-    pub async fn get(&self) -> Option<Object> {
-        self.inner
-            .get()
-            .await
-            .map_err(|e| error!("Failed to get connection from pool: {}", e))
-            .ok()
-    }
-
-    /// Returns true if there is a working database connection.
-    pub async fn ping(&self) -> bool {
-        if let Some(db) = self.get().await {
-            if let Ok(row) = db.query_one("SELECT 42;", &[]).await {
-                if let Ok(res) = row.try_get::<_, i32>(0) {
-                    return res == 42;
-                }
-            }
-        }
-        debug!("Failed to ping the database");
-        false
+    pub async fn get(&self) -> Result<Object, AppError> {
+        self.inner.get().await.map_err(|e| e.into())
     }
 }

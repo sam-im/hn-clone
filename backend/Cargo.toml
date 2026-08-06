@@ -4,11 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }          # async runtime
-axum = "0.8.9"                                          # web server
-serde = { version = "1.0.228", features = ["derive"] }  # json
-tracing = "0.1.44"                                      # logging
-tracing-subscriber = "0.3.23"                           # logging
-tokio-postgres = "0.7.18"                               # database connection
-deadpool-postgres = "0.14.1"                            # database connection pool
-argon2 = { version = "0.5.3", features = ["std"] }      # password hashing
+tokio = { version = "1", features = ["full"] }                      # async runtime
+axum = "0.8.9"                                                      # web server
+serde = { version = "1.0.228", features = ["derive"] }              # json
+tracing = "0.1.44"                                                  # logging
+tracing-subscriber = "0.3.23"                                       # logging
+tokio-postgres = "0.7.18"                                           # database connection
+deadpool-postgres = "0.14.1"                                        # database connection pool
+argon2 = { version = "0.5.3", features = ["std"] }                  # password hashing
+thiserror = "2.0.19"                                                # error handling
+axum-extra = { version = "0.12.6", features = ["typed-header"] }    # utility for extracting HTTP headers
+rand = "0.10.2"                                                     # auth bearer token generation
+pgp = "0.20.0"

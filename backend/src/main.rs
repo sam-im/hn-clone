@@ -1,11 +1,13 @@
 mod client;
 mod config;
 mod dto;
+mod error;
 mod handler;
 mod router;
 mod server;
 mod service;
 
+use server::session::Sessions;
 use tracing::info;
 
 use crate::client::db::Database;
@@ -22,7 +24,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let config = Arc::new(Config::from_env()?);
     let db = Database::new(&config)?;
-    let state = AppState::new(&config, db);
+    db.get().await?.check_connection().await?;
+    let sessions = Sessions::new()?;
+    let state = AppState::new(&config, db, sessions);
 
     let router = create_router(state);
 
