@@ -1,5 +1,7 @@
 pub mod user;
 
-trait Validate {
-    fn validate(&self) -> Result<(), String>;
+use crate::error::AppError;
+
+pub trait Validate {
+    fn validate(&self) -> Result<(), AppError>;
 }
