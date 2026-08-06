@@ -6,13 +6,13 @@ use rand::{
 use std::{
     collections::HashMap,
     sync::Arc,
-    time::{Duration, Instant},
+    time::{Duration, SystemTime},
 };
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinHandle,
 };
-use tracing::{error, info, warn};
+use tracing::info;
 
 use crate::error::{AppError, AppResult};
 
@@ -24,14 +24,14 @@ const CHANNEL_TIMEOUT: Duration = Duration::from_secs(10);
 /// Session Data
 #[derive(Clone)]
 pub struct Session {
-    pub user_id: u32,
-    pub issued_at: Instant,
-    pub expires_at: Instant,
+    pub user_id: i32,
+    pub issued_at: SystemTime,
+    pub expires_at: SystemTime,
 }
 
 impl Session {
-    fn new(user_id: u32, duration: Duration) -> Self {
-        let now = std::time::Instant::now();
+    fn new(user_id: i32, duration: Duration) -> Self {
+        let now = std::time::SystemTime::now();
         Self {
             user_id,
             issued_at: now,
@@ -41,7 +41,7 @@ impl Session {
 }
 
 enum SessionMsg {
-    New(u32, Duration, oneshot::Sender<String>),
+    New(i32, Duration, oneshot::Sender<(String, Session)>),
     Get(String, oneshot::Sender<Option<Session>>),
     Del(String, oneshot::Sender<Option<Session>>),
 }
@@ -50,14 +50,14 @@ struct SessionStore {
     inner: HashMap<String, Session>,
     rng: StdRng,
     rx: mpsc::Receiver<SessionMsg>,
-    last_cleanup: Instant,
+    last_cleanup: SystemTime,
 }
 
 impl SessionStore {
     fn new(rx: mpsc::Receiver<SessionMsg>) -> Result<JoinHandle<()>, Box<dyn std::error::Error>> {
         let inner = HashMap::new();
         let rng = StdRng::try_from_rng(&mut SysRng)?;
-        let last_cleanup = Instant::now();
+        let last_cleanup = SystemTime::now();
         let store = Self {
             inner,
             rng,
@@ -69,7 +69,7 @@ impl SessionStore {
     }
 
     fn cleanup(&mut self) {
-        let now = Instant::now();
+        let now = SystemTime::now();
         let mut count = 0;
         if self.last_cleanup + CLEANUP_INTERVAL < now {
             self.inner = self
@@ -84,7 +84,7 @@ impl SessionStore {
                     }
                 })
                 .collect();
-            self.last_cleanup = Instant::now();
+            self.last_cleanup = SystemTime::now();
             info!("cleaned up {} sessions", count);
         }
     }
@@ -119,8 +119,8 @@ impl SessionStore {
                             // create and return the new token
                             let session = Session::new(user_id, duration);
                             let token = self.generate_token();
-                            self.inner.insert(token.clone(), session);
-                            let _ = tx.send(token);
+                            self.inner.insert(token.clone(), session.clone());
+                            let _ = tx.send((token, session));
                         }
 
                         SessionMsg::Get(token, tx) => {
@@ -147,17 +147,23 @@ impl SessionStore {
 #[derive(Clone)]
 pub struct Sessions {
     tx: mpsc::Sender<SessionMsg>,
-    handle: Arc<JoinHandle<()>>,
+    _handle: Arc<JoinHandle<()>>,
 }
 
 impl Sessions {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let (tx, rx) = mpsc::channel(CHANNEL_CAPACITY);
-        let handle = Arc::new(SessionStore::new(rx)?);
-        Ok(Self { tx, handle })
+        let _handle = Arc::new(SessionStore::new(rx)?);
+        Ok(Self { tx, _handle })
     }
 
-    pub async fn create_session(&self, user_id: u32, duration: Duration) -> AppResult<String> {
+    /// For a given user_id and duration create and return the token and the
+    /// associated `Session` object.
+    pub async fn create_session(
+        &self,
+        user_id: i32,
+        duration: Duration,
+    ) -> AppResult<(String, Session)> {
         let (tx, rx) = oneshot::channel();
         let msg = SessionMsg::New(user_id, duration, tx);
         self.tx
