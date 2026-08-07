@@ -1,3 +1,4 @@
+pub mod session;
 pub mod user;
 
 use serde::Deserialize;

@@ -28,6 +28,8 @@ pub enum AppError {
     AuthError(String),
     #[error(transparent)]
     PgpError(#[from] pgp::errors::Error),
+    #[error(transparent)]
+    SystemTimeError(#[from] std::time::SystemTimeError),
 }
 
 impl From<argon2::password_hash::Error> for AppError {
@@ -93,6 +95,12 @@ impl AppError {
                 None,
                 vec![],
                 StatusCode::NOT_FOUND,
+            ),
+            AppError::SystemTimeError(_) => (
+                "SYSTEM_TIME_ERROR".to_string(),
+                None,
+                vec![],
+                StatusCode::INTERNAL_SERVER_ERROR,
             ),
         };
         (
