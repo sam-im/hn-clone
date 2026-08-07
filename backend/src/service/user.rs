@@ -5,10 +5,8 @@ use argon2::{
 
 use crate::{
     dto::{
-        Validate,
-        user::{
-            RegisterUserRequest, RegisterUserResponse, UpdateField, UpdateUserRequest, UserResponse,
-        },
+        UpdateField, Validate,
+        user::{RegisterUserRequest, RegisterUserResponse, UpdateUserRequest, UserResponse},
     },
     error::{AppError, AppResult},
     server::state::AppState,

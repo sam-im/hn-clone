@@ -14,12 +14,13 @@ use tokio::{
 };
 use tracing::info;
 
-use crate::error::{AppError, AppResult};
-
-const TOKEN_LEN: usize = 64;
-const CLEANUP_INTERVAL: Duration = Duration::from_hours(1);
-const CHANNEL_CAPACITY: usize = 256;
-const CHANNEL_TIMEOUT: Duration = Duration::from_secs(10);
+use crate::{
+    config::{
+        SESSION_CHANNEL_CAPACITY, SESSION_CHANNEL_TIMEOUT, SESSION_CLEANUP_INTERVAL,
+        SESSION_TOKEN_LEN,
+    },
+    error::{AppError, AppResult},
+};
 
 /// Session Data
 #[derive(Clone)]
@@ -71,7 +72,7 @@ impl SessionStore {
     fn cleanup(&mut self) {
         let now = SystemTime::now();
         let mut count = 0;
-        if self.last_cleanup + CLEANUP_INTERVAL < now {
+        if self.last_cleanup + SESSION_CLEANUP_INTERVAL < now {
             self.inner = self
                 .inner
                 .iter()
@@ -92,7 +93,7 @@ impl SessionStore {
     fn generate_token(&mut self) -> String {
         (&mut self.rng)
             .sample_iter(&Alphanumeric)
-            .take(TOKEN_LEN)
+            .take(SESSION_TOKEN_LEN)
             .map(char::from)
             .collect()
     }
@@ -152,7 +153,7 @@ pub struct Sessions {
 
 impl Sessions {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let (tx, rx) = mpsc::channel(CHANNEL_CAPACITY);
+        let (tx, rx) = mpsc::channel(SESSION_CHANNEL_CAPACITY);
         let _handle = Arc::new(SessionStore::new(rx)?);
         Ok(Self { tx, _handle })
     }
@@ -167,7 +168,7 @@ impl Sessions {
         let (tx, rx) = oneshot::channel();
         let msg = SessionMsg::New(user_id, duration, tx);
         self.tx
-            .send_timeout(msg, CHANNEL_TIMEOUT)
+            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
             .await
             .map_err(|e| AppError::SessionError(e.to_string()))?;
         rx.await.map_err(|e| AppError::SessionError(e.to_string()))
@@ -177,7 +178,7 @@ impl Sessions {
         let (tx, rx) = oneshot::channel();
         let msg = SessionMsg::Get(token.to_string(), tx);
         self.tx
-            .send_timeout(msg, CHANNEL_TIMEOUT)
+            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
             .await
             .map_err(|e| AppError::SessionError(e.to_string()))?;
         rx.await.map_err(|e| AppError::SessionError(e.to_string()))
@@ -187,7 +188,7 @@ impl Sessions {
         let (tx, rx) = oneshot::channel();
         let msg = SessionMsg::Del(token.to_string(), tx);
         self.tx
-            .send_timeout(msg, CHANNEL_TIMEOUT)
+            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
             .await
             .map_err(|e| AppError::SessionError(e.to_string()))?;
         rx.await.map_err(|e| AppError::SessionError(e.to_string()))
