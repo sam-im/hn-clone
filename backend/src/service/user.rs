@@ -81,12 +81,13 @@ pub async fn update_user(
         Some(s) => s,
         None => return Err(AppError::AuthError("invalid session token".to_string())),
     };
+    session.is_expired()?;
 
     let mut db = state.db.get().await?;
     let transaction = db.transaction().await?;
 
     let statement = transaction
-        .prepare_cached("SELECT _username FROM _user WHERE _user_id = $1")
+        .prepare_cached("SELECT _username FROM _user WHERE _id = $1")
         .await?;
     let rows = transaction.query(&statement, &[&session.user_id]).await?;
     let row = match rows.first() {
@@ -105,7 +106,7 @@ pub async fn update_user(
     if let UpdateField::Set(password) = req.password {
         let phc = hash_password(&password)?;
         let statement = transaction
-            .prepare_cached("UPDATE _user SET _password_hash = $1 WHERE _user_id = $2;")
+            .prepare_cached("UPDATE _user SET _password_hash = $1 WHERE _id = $2;")
             .await?;
         transaction
             .execute(&statement, &[&phc, &session.user_id])
@@ -116,7 +117,7 @@ pub async fn update_user(
         UpdateField::Unspecified => (),
         UpdateField::Set(about) => {
             let statement = transaction
-                .prepare_cached("UPDATE _user SET _about = $1 WHERE _user_id = $2;")
+                .prepare_cached("UPDATE _user SET _about = $1 WHERE _id = $2;")
                 .await?;
             transaction
                 .execute(&statement, &[&about, &session.user_id])
@@ -124,7 +125,7 @@ pub async fn update_user(
         }
         UpdateField::Clear => {
             let statement = transaction
-                .prepare_cached("UPDATE _user SET _about = NULL WHERE _user_id = $1;")
+                .prepare_cached("UPDATE _user SET _about = NULL WHERE _id = $1;")
                 .await?;
             transaction.execute(&statement, &[&session.user_id]).await?;
         }
@@ -134,7 +135,7 @@ pub async fn update_user(
         UpdateField::Unspecified => (),
         UpdateField::Set(pubkey) => {
             let statement = transaction
-                .prepare_cached("UPDATE _user SET _public_key = $1 WHERE _user_id = $2;")
+                .prepare_cached("UPDATE _user SET _public_key = $1 WHERE _id = $2;")
                 .await?;
             // TODO: consider importing and exporting the key with rpgp crate
             // with the hope of removing unnecessary information.
@@ -144,11 +145,12 @@ pub async fn update_user(
         }
         UpdateField::Clear => {
             let statement = transaction
-                .prepare_cached("UPDATE _user SET _public_key = NULL WHERE _user_id = $1;")
+                .prepare_cached("UPDATE _user SET _public_key = NULL WHERE _id = $1;")
                 .await?;
             transaction.execute(&statement, &[&session.user_id]).await?;
         }
     }
+    transaction.commit().await?;
 
     Ok(())
 }
