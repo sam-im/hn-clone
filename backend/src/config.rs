@@ -9,10 +9,6 @@ pub const USERNAME_MIN_LEN: usize = 4;
 pub const USERNAME_MAX_LEN: usize = 36;
 pub const PASSWORD_MIN_LEN: usize = 8;
 pub const PASSWORD_MAX_LEN: usize = 64;
-pub const PASSWORD_SPECIAL_CHARS: &[char] = &[
-    '`', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', ']', '{',
-    '}', '\\', '|', ';', ':', '\'', '"', ',', '.', '/', '<', '>', '?',
-];
 pub const PUBKEY_MAX_LEN: usize = 64 * 1024;
 /// Allowed length of the about section in user profiles.
 pub const ABOUT_MAX_LEN: usize = 256;

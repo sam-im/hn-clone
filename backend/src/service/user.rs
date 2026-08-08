@@ -5,45 +5,40 @@ use argon2::{
 
 use crate::{
     dto::{
-        UpdateField, Validate,
-        user::{RegisterUserRequest, RegisterUserResponse, UpdateUserRequest, UserResponse},
+        UpdateField,
+        user::{RegisterUserRequest, UpdateUserRequest, UserResponse},
     },
     error::{AppError, AppResult},
-    server::state::AppState,
+    server::{session::Session, state::AppState},
 };
 
-pub async fn register_user(
-    state: AppState,
-    req: RegisterUserRequest,
-) -> AppResult<RegisterUserResponse> {
-    req.validate()?;
+pub async fn register_user(state: AppState, req: RegisterUserRequest) -> AppResult<UserResponse> {
     let mut db = state.db.get().await?;
     let transaction = db.transaction().await?;
 
-    let statement = transaction
+    let check_stmt = transaction
         .prepare_cached("SELECT _id FROM _user WHERE _user._username = $1;")
         .await?;
-    let result = transaction.query(&statement, &[&req.username]).await?;
+    let result = transaction.query(&check_stmt, &[&req.username]).await?;
     if !(result.is_empty()) {
         return Err(AppError::ResourceExistsError);
     }
 
-    let statement = transaction
+    let insert_stmt = transaction
         .prepare_cached("INSERT INTO _user (_username, _password_hash) VALUES ($1, $2);")
         .await?;
     let phc = hash_password(&req.password)?;
     transaction
-        .execute(&statement, &[&req.username, &phc])
+        .execute(&insert_stmt, &[&req.username, &phc])
         .await?;
-
-    let statement = transaction
-        .prepare_cached("SELECT _id FROM _user WHERE _username = $1;")
-        .await?;
-    let result = transaction.query_one(&statement, &[&req.username]).await?;
-    let id: i32 = result.get(0);
-
     transaction.commit().await?;
-    Ok(RegisterUserResponse { id })
+
+    let query_stmt = db
+        .prepare_cached("SELECT _username, _about, _public_key FROM _user WHERE _username = $1;")
+        .await?;
+    let row = db.query_one(&query_stmt, &[&req.username]).await?;
+
+    Ok(UserResponse::from(&row))
 }
 
 pub async fn retrieve_user(state: AppState, username: &str) -> AppResult<UserResponse> {
@@ -53,36 +48,18 @@ pub async fn retrieve_user(state: AppState, username: &str) -> AppResult<UserRes
         .await?;
 
     let rows = db.query(&statement, &[&username]).await?;
-    let row = match rows.first() {
-        Some(r) => r,
-        None => return Err(AppError::ResourceNotFound),
-    };
-
-    let username: String = row.get("_username");
-    let about: Option<String> = row.get("_about");
-    let pubkey: Option<String> = row.get("_public_key");
-    let user = UserResponse {
-        username,
-        about,
-        pubkey,
-    };
-    Ok(user)
+    match rows.first() {
+        Some(r) => Ok(UserResponse::from(r)),
+        None => Err(AppError::ResourceNotFound),
+    }
 }
 
 pub async fn update_user(
     state: AppState,
-    token: &str,
+    session: Session,
     username: &str,
     req: UpdateUserRequest,
 ) -> AppResult {
-    req.validate()?;
-
-    let session = match state.sessions.get_session(token).await? {
-        Some(s) => s,
-        None => return Err(AppError::AuthError("invalid session token".to_string())),
-    };
-    session.is_expired()?;
-
     let mut db = state.db.get().await?;
     let transaction = db.transaction().await?;
 

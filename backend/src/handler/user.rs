@@ -1,8 +1,15 @@
 use crate::{
-    dto::user::{RegisterUserRequest, RegisterUserResponse, UpdateUserRequest, UserResponse},
+    dto::{
+        Validate,
+        user::{RegisterUserRequest, UpdateUserRequest, UserResponse},
+        validate_username,
+    },
     error::AppResult,
     server::state::AppState,
-    service::user::{register_user, retrieve_user, update_user},
+    service::{
+        session::verify_session,
+        user::{register_user, retrieve_user, update_user},
+    },
 };
 
 use axum::{
@@ -20,6 +27,8 @@ pub async fn get_user(
     State(state): State<AppState>,
     Path(username): Path<String>,
 ) -> AppResult<(StatusCode, Json<UserResponse>)> {
+    validate_username(&username)?;
+
     match retrieve_user(state, &username).await {
         Ok(user) => Ok((StatusCode::OK, Json(user))),
         Err(e) => {
@@ -32,11 +41,13 @@ pub async fn get_user(
 pub async fn post_user(
     State(state): State<AppState>,
     Json(body): Json<RegisterUserRequest>,
-) -> AppResult<(StatusCode, Json<RegisterUserResponse>)> {
+) -> AppResult<(StatusCode, Json<UserResponse>)> {
+    body.validate()?;
+
     match register_user(state, body).await {
-        Ok(response) => {
-            info!("registered a new user with id: {}", response.id);
-            Ok((StatusCode::CREATED, Json(response)))
+        Ok(resp) => {
+            info!("registered: {}", resp.username);
+            Ok((StatusCode::CREATED, Json(resp)))
         }
         Err(e) => {
             warn!("Failed to register user: {e:?}");
@@ -47,11 +58,16 @@ pub async fn post_user(
 
 pub async fn patch_user(
     State(state): State<AppState>,
-    TypedHeader(bearer): TypedHeader<Authorization<Bearer>>,
+    TypedHeader(token): TypedHeader<Authorization<Bearer>>,
     Path(username): Path<String>,
     Json(body): Json<UpdateUserRequest>,
 ) -> AppResult<StatusCode> {
-    match update_user(state, bearer.token(), &username, body).await {
+    token.validate()?;
+    let session = verify_session(&state, token.token()).await?;
+    validate_username(&username)?;
+    body.validate()?;
+
+    match update_user(state, session, &username, body).await {
         Ok(_) => {
             info!("updated user with username: {}", username);
             Ok(StatusCode::OK)

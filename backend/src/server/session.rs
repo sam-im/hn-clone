@@ -43,7 +43,7 @@ impl Session {
     pub fn is_expired(&self) -> AppResult<()> {
         let now = SystemTime::now();
         if now > self.expires_at {
-            return Err(AppError::AuthError("token expired".to_string()));
+            return Err(AppError::AuthError("session expired".to_string()));
         }
         Ok(())
     }

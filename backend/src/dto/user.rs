@@ -3,9 +3,12 @@ use crate::{
     error::{AppError, AppResult},
 };
 
-use super::{UpdateField, Validate, validate_password, validate_pubkey, validate_username};
+use super::{
+    UpdateField, Validate, is_valid_len, validate_password, validate_pubkey, validate_username,
+};
 
 use serde::{Deserialize, Serialize};
+use tokio_postgres::Row;
 
 #[derive(Deserialize)]
 pub struct RegisterUserRequest {
@@ -37,12 +40,12 @@ impl Validate for UpdateUserRequest {
         }
 
         if let UpdateField::Set(about) = &self.about {
-            if about.len() > ABOUT_MAX_LEN {
+            if !is_valid_len(&about, &(None, Some(ABOUT_MAX_LEN))) {
                 return Err(AppError::InvalidInputError(format!(
                     "About sections can not be larger than {ABOUT_MAX_LEN}."
                 )));
             }
-            // TODO: further validate to prevent XSS attacks
+            // TODO: further validate to prevent XSS attacks / consider escaping before using on the frontend
         }
 
         if let UpdateField::Set(pubkey) = &self.pubkey {
@@ -52,16 +55,23 @@ impl Validate for UpdateUserRequest {
     }
 }
 
-// TODO: consider unifying with UserResponse
-#[derive(Serialize)]
-pub struct RegisterUserResponse {
-    pub id: i32,
-}
-
 #[derive(Serialize)]
 pub struct UserResponse {
     pub username: String,
     pub about: Option<String>,
-    // pub karma: usize,
     pub pubkey: Option<String>,
+}
+
+impl From<&Row> for UserResponse {
+    fn from(value: &Row) -> Self {
+        let username = value.get("_username");
+        let about = value.get("_about");
+        let pubkey = value.get("_public_key");
+
+        Self {
+            username,
+            about,
+            pubkey,
+        }
+    }
 }
