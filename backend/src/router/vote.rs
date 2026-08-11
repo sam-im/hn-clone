@@ -7,6 +7,6 @@ use crate::{
 
 pub fn add_routers(router: Router<AppState>) -> Router<AppState> {
     router
-        .route("/vote/{id}", routing::get(post_vote))
+        .route("/vote/{id}", routing::post(post_vote))
         .route("/vote/{id}", routing::delete(delete_vote))
 }
