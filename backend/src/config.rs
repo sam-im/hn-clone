@@ -19,6 +19,8 @@ pub const SESSION_TOKEN_LEN: usize = 64;
 pub const SESSION_CLEANUP_INTERVAL: Duration = Duration::from_hours(1);
 pub const SESSION_CHANNEL_CAPACITY: usize = 256;
 pub const SESSION_CHANNEL_TIMEOUT: Duration = Duration::from_secs(10);
+pub const POST_TITLE_LEN: usize = 256;
+pub const POST_CONTENT_LEN: usize = 2048;
 
 #[derive(Clone)]
 pub struct Config {
