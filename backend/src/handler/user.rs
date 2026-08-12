@@ -5,11 +5,8 @@ use crate::{
         validate_username,
     },
     error::AppResult,
-    server::state::AppState,
-    service::{
-        session::verify_session,
-        user::{register_user, retrieve_user, update_user},
-    },
+    server::{session::verify_session, state::AppState},
+    service::user::{register_user, retrieve_user, update_user},
 };
 
 use axum::{
@@ -63,7 +60,7 @@ pub async fn patch_user(
     Json(body): Json<UpdateUserRequest>,
 ) -> AppResult<StatusCode> {
     token.validate()?;
-    let session = verify_session(&state, token.token()).await?;
+    let session = verify_session(&state.sessions, token.token()).await?;
     validate_username(&username)?;
     body.validate()?;
 

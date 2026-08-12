@@ -15,11 +15,8 @@ use crate::{
         comment::{CommentResponse, NewCommentRequest},
     },
     error::AppResult,
-    server::state::AppState,
-    service::{
-        comment::{create_comment, retrieve_comment},
-        session::verify_session,
-    },
+    server::{session::verify_session, state::AppState},
+    service::comment::{create_comment, retrieve_comment},
 };
 
 pub async fn get_comment(
@@ -37,7 +34,7 @@ pub async fn post_comment(
     Json(body): Json<NewCommentRequest>,
 ) -> AppResult<(StatusCode, Json<CommentResponse>)> {
     token.validate()?;
-    let session = verify_session(&state, token.token()).await?;
+    let session = verify_session(&state.sessions, token.token()).await?;
     body.validate()?;
 
     match create_comment(state, session, body).await {

@@ -98,6 +98,6 @@ async fn query_post(db: &Object, id: i32) -> AppResult<PostResponse> {
                 .collect();
             Ok(post)
         }
-        None => Err(AppError::ResourceNotFound),
+        None => Err(AppError::ResourceNotFoundError),
     }
 }

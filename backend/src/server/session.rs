@@ -22,6 +22,19 @@ use crate::{
     error::{AppError, AppResult},
 };
 
+pub async fn verify_session(sessions: &Sessions, token: &str) -> AppResult<Session> {
+    let session = match sessions.get_session(token).await? {
+        Some(s) => {
+            if s.is_expired() {
+                return Err(AppError::AuthError("expired token".to_string()));
+            }
+            s
+        }
+        None => return Err(AppError::AuthError("invalid token".to_string())),
+    };
+    Ok(session)
+}
+
 /// Session Data
 #[derive(Clone)]
 pub struct Session {
@@ -39,13 +52,10 @@ impl Session {
             expires_at: now + duration,
         }
     }
-    /// Returns an AuthError if the session has expired.
-    pub fn is_expired(&self) -> AppResult<()> {
+    /// Returns true if the session has expired.
+    pub fn is_expired(&self) -> bool {
         let now = SystemTime::now();
-        if now > self.expires_at {
-            return Err(AppError::AuthError("session expired".to_string()));
-        }
-        Ok(())
+        now > self.expires_at
     }
 }
 

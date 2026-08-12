@@ -11,11 +11,8 @@ use tracing::warn;
 use crate::{
     dto::Validate,
     error::AppResult,
-    server::state::AppState,
-    service::{
-        session::verify_session,
-        vote::{add_vote, remove_vote},
-    },
+    server::{session::verify_session, state::AppState},
+    service::vote::{add_vote, remove_vote},
 };
 
 pub async fn post_vote(
@@ -24,7 +21,7 @@ pub async fn post_vote(
     Path(item_id): Path<i32>,
 ) -> AppResult<StatusCode> {
     token.validate()?;
-    let session = verify_session(&state, token.token()).await?;
+    let session = verify_session(&state.sessions, token.token()).await?;
 
     match add_vote(state, session, item_id).await {
         Ok(_) => Ok(StatusCode::CREATED),
@@ -40,7 +37,7 @@ pub async fn delete_vote(
     Path(item_id): Path<i32>,
 ) -> AppResult<StatusCode> {
     token.validate()?;
-    let session = verify_session(&state, token.token()).await?;
+    let session = verify_session(&state.sessions, token.token()).await?;
 
     match remove_vote(state, session, item_id).await {
         Ok(_) => Ok(StatusCode::NO_CONTENT),

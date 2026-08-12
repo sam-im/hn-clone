@@ -50,7 +50,7 @@ pub async fn retrieve_user(state: AppState, username: &str) -> AppResult<UserRes
     let rows = db.query(&statement, &[&username]).await?;
     match rows.first() {
         Some(r) => Ok(UserResponse::from(r)),
-        None => Err(AppError::ResourceNotFound),
+        None => Err(AppError::ResourceNotFoundError),
     }
 }
 
@@ -67,16 +67,20 @@ pub async fn update_user(
         .prepare_cached("SELECT _username FROM _user WHERE _id = $1")
         .await?;
     let rows = transaction.query(&statement, &[&session.user_id]).await?;
-    let row = match rows.first() {
-        Some(r) => r,
-        None => return Err(AppError::ResourceNotFound),
+    let session_username: String = match rows.first() {
+        Some(r) => r.get("_username"),
+        None => {
+            return Err(AppError::AuthError(format!(
+                "user_id {} no longer exists",
+                session.user_id
+            )));
+        }
     };
 
-    let session_username: String = row.get("_username");
     if session_username != username {
         return Err(AppError::AuthError(format!(
-            "token bearer is not authorized to modify {}",
-            username
+            " {} is not authorized to modify {}",
+            session.user_id, username
         )));
     }
 

@@ -5,7 +5,7 @@ use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use crate::{
     dto::session::{SessionRequest, SessionResponse, TokenFromRequest},
     error::{AppError, AppResult},
-    server::{session::Session, state::AppState},
+    server::state::AppState,
 };
 
 pub async fn create_session(state: AppState, req: SessionRequest) -> AppResult<SessionResponse> {
@@ -22,6 +22,7 @@ pub async fn create_session(state: AppState, req: SessionRequest) -> AppResult<S
 
     let phc = PasswordHash::new(&phc)?;
     let argon2 = Argon2::default();
+    // NOTE: this call takes about 300-400ms
     if let Err(_) = argon2.verify_password(&req.password.as_bytes(), &phc) {
         return Err(AppError::AuthError("invalid input".to_string()));
     }
@@ -35,7 +36,7 @@ pub async fn create_session(state: AppState, req: SessionRequest) -> AppResult<S
 pub async fn remove_session(state: AppState, token: TokenFromRequest) -> AppResult {
     match state.sessions.delete_session(&token.token).await? {
         Some(_) => Ok(()),
-        None => Err(AppError::ResourceNotFound),
+        None => Err(AppError::ResourceNotFoundError),
     }
 }
 
@@ -45,8 +46,11 @@ pub async fn retrieve_session(
 ) -> AppResult<SessionResponse> {
     let session = match state.sessions.get_session(&token.token).await? {
         Some(s) => s,
-        None => return Err(AppError::ResourceNotFound),
+        None => return Err(AppError::ResourceNotFoundError),
     };
+    if session.is_expired() {
+        return Err(AppError::ResourceNotFoundError);
+    }
     let db = state.db.get().await?;
     let statement = db
         .prepare_cached("SELECT _username FROM _user WHERE _id = $1;")
@@ -58,15 +62,4 @@ pub async fn retrieve_session(
         session,
         token.token.to_string(),
     ))?)
-}
-
-pub async fn verify_session(state: &AppState, token: &str) -> AppResult<Session> {
-    let session = match state.sessions.get_session(token).await? {
-        Some(s) => {
-            s.is_expired()?;
-            s
-        }
-        None => return Err(AppError::AuthError("invalid token".to_string())),
-    };
-    Ok(session)
 }

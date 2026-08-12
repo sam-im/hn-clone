@@ -1,5 +1,5 @@
 use tokio_postgres::error::SqlState;
-use tracing::{error, warn};
+use tracing::error;
 
 use crate::{
     error::{AppError, AppResult},
@@ -13,13 +13,16 @@ pub async fn add_vote(state: AppState, session: Session, item_id: i32) -> AppRes
         .await?;
     match db.execute(&stmt, &[&item_id, &session.user_id]).await {
         Ok(_) => Ok(()),
-        Err(e) => {
-            if let Some(db_err) = e.as_db_error() {
-                if db_err.code() == &SqlState::UNIQUE_VIOLATION {
-                    return Err(AppError::ResourceExistsError);
-                }
+        Err(err) => {
+            if let Some(db_err) = err.as_db_error() {
+                let app_err = match db_err.code() {
+                    &SqlState::UNIQUE_VIOLATION => AppError::ResourceNotModifiedError,
+                    &SqlState::FOREIGN_KEY_VIOLATION => AppError::ResourceNotFoundError,
+                    _ => AppError::DatabaseError(err),
+                };
+                return Err(app_err);
             }
-            Err(AppError::DatabaseError(e))
+            Err(AppError::DatabaseError(err))
         }
     }
 }
@@ -31,7 +34,7 @@ pub async fn remove_vote(state: AppState, session: Session, item_id: i32) -> App
         .await?;
     match db.execute(&stmt, &[&item_id, &session.user_id]).await {
         Ok(n) => match n {
-            0 => Err(AppError::ResourceNotFound),
+            0 => Err(AppError::ResourceNotFoundError),
             1 => Ok(()),
             _ => {
                 error!("removed {} upvotes with a single request", n);

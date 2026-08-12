@@ -15,11 +15,8 @@ use crate::{
         post::{NewPostRequest, PostResponse},
     },
     error::AppResult,
-    server::state::AppState,
-    service::{
-        post::{create_post, retrieve_post},
-        session::verify_session,
-    },
+    server::{session::verify_session, state::AppState},
+    service::post::{create_post, retrieve_post},
 };
 
 pub async fn post_post(
@@ -28,7 +25,7 @@ pub async fn post_post(
     Json(body): Json<NewPostRequest>,
 ) -> AppResult<(StatusCode, Json<PostResponse>)> {
     token.validate()?;
-    let session = verify_session(&state, token.token()).await?;
+    let session = verify_session(&state.sessions, token.token()).await?;
     body.validate()?;
 
     match create_post(state, session, body).await {
@@ -48,6 +45,8 @@ pub async fn get_post(
         Err(e) => Err(e),
     }
 }
+
+// TODO: consider moving to posts.rs
 pub async fn get_posts(State(_state): State<AppState>) {
     todo!()
 }

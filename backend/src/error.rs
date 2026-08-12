@@ -21,7 +21,9 @@ pub enum AppError {
     #[error("resource already exists")]
     ResourceExistsError, // TODO: capture info about the resource
     #[error("resource not found")]
-    ResourceNotFound, // TODO: capture info about the resource
+    ResourceNotFoundError, // TODO: capture info about the resource
+    #[error("resource not modified")]
+    ResourceNotModifiedError, // TODO: capture info about the resource
     #[error("sessions error: {0}")]
     SessionError(String),
     #[error("auth error: {0}")]
@@ -90,17 +92,23 @@ impl AppError {
                 vec![],
                 StatusCode::BAD_REQUEST,
             ),
-            AppError::ResourceNotFound => (
-                "RESOURCE_NOT_FOUND".to_string(),
-                None,
-                vec![],
-                StatusCode::NOT_FOUND,
-            ),
             AppError::SystemTimeError(_) => (
                 "SYSTEM_TIME_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::INTERNAL_SERVER_ERROR,
+            ),
+            AppError::ResourceNotFoundError => (
+                "RESOURCE_NOT_FOUND_ERROR".to_string(),
+                None,
+                vec![],
+                StatusCode::NOT_FOUND,
+            ),
+            AppError::ResourceNotModifiedError => (
+                "RESOURCE_NOT_MODIFIED".to_string(),
+                None,
+                vec![],
+                StatusCode::NOT_MODIFIED,
             ),
         };
         (

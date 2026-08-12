@@ -76,7 +76,7 @@ async fn query_comment(db: &Object, id: i32) -> AppResult<CommentResponse> {
 
     let mut comment = match db.query_opt(&comment_stmt, &[&id]).await? {
         Some(row) => CommentResponse::from(&row),
-        None => return Err(AppError::ResourceNotFound),
+        None => return Err(AppError::ResourceNotFoundError),
     };
 
     // TODO: consider returning Vec<CommentResponse> in children
