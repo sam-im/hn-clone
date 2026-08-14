@@ -16,11 +16,11 @@ pub trait Validate {
     fn validate(&self) -> AppResult;
 }
 
-/// Used with PATCH requests, where a field may be specified,
-/// specified but set to null, or unspecified.
+/// Used with optional fields, where it may be specified,
+/// specified but set to `null`, or unspecified.
 #[derive(Default, Deserialize)]
 #[serde(untagged)]
-pub enum UpdateField<T> {
+pub enum OptionalField<T> {
     /// Field is present and set to something.
     Set(T),
     /// Field is present and set to null.

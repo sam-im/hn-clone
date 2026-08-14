@@ -5,7 +5,7 @@ use argon2::{
 
 use crate::{
     dto::{
-        UpdateField,
+        OptionalField,
         user::{RegisterUserRequest, UpdateUserRequest, UserResponse},
     },
     error::{AppError, AppResult},
@@ -84,7 +84,7 @@ pub async fn update_user(
         )));
     }
 
-    if let UpdateField::Set(password) = req.password {
+    if let OptionalField::Set(password) = req.password {
         let phc = hash_password(&password)?;
         let statement = transaction
             .prepare_cached("UPDATE _user SET _password_hash = $1 WHERE _id = $2;")
@@ -95,8 +95,8 @@ pub async fn update_user(
     }
 
     match req.about {
-        UpdateField::Unspecified => (),
-        UpdateField::Set(about) => {
+        OptionalField::Unspecified => (),
+        OptionalField::Set(about) => {
             let statement = transaction
                 .prepare_cached("UPDATE _user SET _about = $1 WHERE _id = $2;")
                 .await?;
@@ -104,7 +104,7 @@ pub async fn update_user(
                 .execute(&statement, &[&about, &session.user_id])
                 .await?;
         }
-        UpdateField::Clear => {
+        OptionalField::Clear => {
             let statement = transaction
                 .prepare_cached("UPDATE _user SET _about = NULL WHERE _id = $1;")
                 .await?;
@@ -113,8 +113,8 @@ pub async fn update_user(
     }
 
     match req.pubkey {
-        UpdateField::Unspecified => (),
-        UpdateField::Set(pubkey) => {
+        OptionalField::Unspecified => (),
+        OptionalField::Set(pubkey) => {
             let statement = transaction
                 .prepare_cached("UPDATE _user SET _public_key = $1 WHERE _id = $2;")
                 .await?;
@@ -124,7 +124,7 @@ pub async fn update_user(
                 .execute(&statement, &[&pubkey, &session.user_id])
                 .await?;
         }
-        UpdateField::Clear => {
+        OptionalField::Clear => {
             let statement = transaction
                 .prepare_cached("UPDATE _user SET _public_key = NULL WHERE _id = $1;")
                 .await?;

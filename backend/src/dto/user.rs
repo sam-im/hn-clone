@@ -4,7 +4,7 @@ use crate::{
 };
 
 use super::{
-    UpdateField, Validate, is_valid_len, validate_password, validate_pubkey, validate_username,
+    OptionalField, Validate, is_valid_len, validate_password, validate_pubkey, validate_username,
 };
 
 use serde::{Deserialize, Serialize};
@@ -26,20 +26,20 @@ impl Validate for RegisterUserRequest {
 #[derive(Deserialize)]
 pub struct UpdateUserRequest {
     #[serde(default)]
-    pub password: UpdateField<String>,
+    pub password: OptionalField<String>,
     #[serde(default)]
-    pub about: UpdateField<String>,
+    pub about: OptionalField<String>,
     #[serde(default)]
-    pub pubkey: UpdateField<String>,
+    pub pubkey: OptionalField<String>,
 }
 
 impl Validate for UpdateUserRequest {
     fn validate(&self) -> AppResult {
-        if let UpdateField::Set(password) = &self.password {
+        if let OptionalField::Set(password) = &self.password {
             validate_password(&password)?;
         }
 
-        if let UpdateField::Set(about) = &self.about {
+        if let OptionalField::Set(about) = &self.about {
             if !is_valid_len(&about, &(None, Some(ABOUT_MAX_LEN))) {
                 return Err(AppError::InvalidInputError(format!(
                     "About sections can not be larger than {ABOUT_MAX_LEN}."
@@ -48,7 +48,7 @@ impl Validate for UpdateUserRequest {
             // TODO: further validate to prevent XSS attacks / consider escaping before using on the frontend
         }
 
-        if let UpdateField::Set(pubkey) = &self.pubkey {
+        if let OptionalField::Set(pubkey) = &self.pubkey {
             validate_pubkey(&pubkey)?;
         }
         Ok(())
