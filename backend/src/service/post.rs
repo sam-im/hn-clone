@@ -59,45 +59,29 @@ async fn query_post(db: &Object, id: i32) -> AppResult<PostResponse> {
         .prepare_cached(
             "SELECT _item._id AS _id,
                     _item._created_at AS _created_at,
-                    (
-                        SELECT _user._username
-                        FROM _user
-                        WHERE _user._id = _item._owner
-                    ) AS _owner,
+                    _user._username AS _owner,
                     (
                         SELECT COUNT(DISTINCT _upvote._user)
                         FROM _upvote
                         WHERE _upvote._item = _item._id
                     ) AS _upvotes,
+                    (
+                        SELECT COUNT(*)
+                        FROM _comment
+                        WHERE _comment._parent = _item._id
+                    ) AS _comments,
                     _post._title AS _title,
                     _post._content AS _content
-            FROM _item INNER JOIN _post ON _item._id = _post._id
+            FROM _item
+                INNER JOIN _post ON _item._id = _post._id
+                INNER JOIN _user ON _user._id = _item._owner
             WHERE _item._id = $1;",
         )
         .await?;
 
-    match db.query_opt(&post_stmt, &[&id]).await? {
-        Some(row) => {
-            let mut post = PostResponse::from(&row);
-            let comments_stmt = db
-                .prepare_cached(
-                    "SELECT _comment._id AS _id,
-                            _item._created_at AS _created_at
-                    FROM _comment 
-                    INNER JOIN _item ON _comment._id = _item._id
-                    WHERE _comment._parent = $1
-                    ORDER BY _item._created_at DESC;",
-                )
-                .await?;
-
-            post.comments = db
-                .query(&comments_stmt, &[&post.id])
-                .await?
-                .iter()
-                .map(|r| r.get("_id"))
-                .collect();
-            Ok(post)
-        }
-        None => Err(AppError::ResourceNotFoundError),
-    }
+    let post = match db.query_opt(&post_stmt, &[&id]).await? {
+        Some(row) => PostResponse::from(&row),
+        None => return Err(AppError::ResourceNotFoundError),
+    };
+    Ok(post)
 }

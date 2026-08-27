@@ -35,7 +35,7 @@ pub struct CommentResponse {
     pub created_at: i64,
     pub owner: String,
     pub parent: i32,
-    pub children: Vec<i32>,
+    pub replies: i64,
     pub upvotes: i64,
     pub content: String,
 }
@@ -48,6 +48,7 @@ impl From<&Row> for CommentResponse {
         let owner = value.get("_owner");
         let parent = value.get("_parent");
         let upvotes = value.get("_upvotes");
+        let replies = value.get("_replies");
         let content = value.get("_content");
 
         Self {
@@ -55,7 +56,7 @@ impl From<&Row> for CommentResponse {
             id,
             owner,
             parent,
-            children: vec![],
+            replies,
             upvotes,
             content,
         }

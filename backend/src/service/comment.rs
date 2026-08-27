@@ -66,30 +66,22 @@ async fn query_comment(db: &Object, id: i32) -> AppResult<CommentResponse> {
                     FROM _upvote
                     WHERE _upvote._item = _item._id
                 ) AS _upvotes,
+                (
+                    SELECT COUNT(*)
+                    FROM _comment
+                    WHERE _comment._parent = _item._id
+                ) AS _replies,
                 _comment._content AS _content
-            FROM _item 
+            FROM _item
             INNER JOIN _comment ON _item._id = _comment._id
             INNER JOIN _user ON _item._owner = _user._id
             WHERE _item._id = $1;",
         )
         .await?;
 
-    let mut comment = match db.query_opt(&comment_stmt, &[&id]).await? {
+    let comment = match db.query_opt(&comment_stmt, &[&id]).await? {
         Some(row) => CommentResponse::from(&row),
         None => return Err(AppError::ResourceNotFoundError),
     };
-
-    // TODO: consider returning Vec<CommentResponse> in children
-    let children_stmt = db
-        .prepare_cached(
-            "SELECT _id
-            FROM _comment
-            WHERE _parent = $1;",
-        )
-        .await?;
-    let rows = db.query(&children_stmt, &[&id]).await?;
-    let children: Vec<i32> = rows.iter().map(|r| r.get("_id")).collect();
-    comment.children = children;
-
     Ok(comment)
 }

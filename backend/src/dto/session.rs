@@ -3,7 +3,10 @@ use std::time::UNIX_EPOCH;
 use axum_extra::headers::{Authorization, authorization::Bearer};
 use serde::{Deserialize, Serialize};
 
-use super::{Validate, validate_password, validate_username};
+use super::{
+    Validate,
+    user::{validate_password, validate_username},
+};
 use crate::{
     config::{SESSION_DURATIONS, SESSION_TOKEN_LEN},
     error::{AppError, AppResult},

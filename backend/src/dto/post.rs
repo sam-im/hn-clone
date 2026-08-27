@@ -7,11 +7,6 @@ use crate::{config, error::AppError};
 
 use super::{Validate, is_valid_charset, is_valid_len};
 
-// NOTE:
-// An example of validation for arbitrary text input:
-// - Character length between 0 and X
-// - No unicode characters, characters in english only
-
 #[derive(Deserialize)]
 pub struct NewPostRequest {
     pub title: String,
@@ -41,42 +36,16 @@ impl Validate for NewPostRequest {
             char::is_ascii_whitespace,
         ];
         if !is_valid_charset(&self.title, &predicates) {
-            return Err(AppError::InvalidInputError(format!("TODO")));
+            return Err(AppError::InvalidInputError(format!(
+                "Invalid character(s) in post title."
+            )));
         }
         if !is_valid_charset(&self.content, &predicates) {
-            return Err(AppError::InvalidInputError(format!("TODO")));
+            return Err(AppError::InvalidInputError(format!(
+                "Invalid character(s) in post body."
+            )));
         }
         Ok(())
-    }
-}
-
-// TODO: impl. algo. similar to HN frontpage, with optional query for dates
-// date format: dd/mm/yyyy
-pub struct PopularPostsRequest {
-    // date: Option<String>
-}
-impl Validate for PopularPostsRequest {
-    fn validate(&self) -> AppResult {
-        todo!()
-    }
-}
-
-// TODO: impl. querying posts with optional query parameters:
-// - title search (title="searched_title"),
-// - sort direction (sort="asc" or "desc"*)
-// - sort by (sort-by="score" or "date")
-// - pagination (page=1*, per_page: 20*)
-pub struct QueryPostsRequest {
-    pub title_search: Option<()>,
-    pub sort_by: Option<()>,
-    pub sort_order: Option<()>,
-    pub page: usize,
-    pub per_page: usize,
-}
-
-impl Validate for QueryPostsRequest {
-    fn validate(&self) -> AppResult {
-        todo!()
     }
 }
 
@@ -84,7 +53,7 @@ impl Validate for QueryPostsRequest {
 pub struct PostResponse {
     pub id: i32,
     pub created_at: i64,
-    pub comments: Vec<i32>,
+    pub comments: i64,
     pub owner: String,
     pub title: String,
     pub content: String,
@@ -100,12 +69,13 @@ impl From<&Row> for PostResponse {
         let upvotes = value.get("_upvotes");
         let title = value.get("_title");
         let content = value.get("_content");
+        let comments = value.get("_comments");
 
         Self {
             id,
             upvotes,
             created_at,
-            comments: vec![],
+            comments,
             owner,
             title,
             content,

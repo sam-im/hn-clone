@@ -1,8 +1,7 @@
 use crate::{
     dto::{
         Validate,
-        user::{RegisterUserRequest, UpdateUserRequest, UserResponse},
-        validate_username,
+        user::{RegisterUserRequest, UpdateUserRequest, UserResponse, validate_username},
     },
     error::AppResult,
     server::{session::verify_session, state::AppState},
