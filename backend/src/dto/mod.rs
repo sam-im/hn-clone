@@ -3,6 +3,7 @@ pub mod post;
 pub mod session;
 pub mod user;
 
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -29,12 +30,24 @@ pub enum OptionalField<T> {
     Unspecified,
 }
 
+#[derive(Deserialize)]
+pub struct PaginationParams {
+    pub offset: u32,
+    pub limit: u32,
 }
 
+impl From<HashMap<String, u32>> for PaginationParams {
+    fn from(value: HashMap<String, u32>) -> Self {
+        let offset = value.get("offset").unwrap_or(&0).to_owned();
+        let limit = value.get("limit").unwrap_or(&20).to_owned();
+        Self { offset, limit }
     }
-    Ok(())
 }
 
+#[derive(Serialize)]
+pub struct PaginationResponse<T> {
+    pub offset: Option<usize>,
+    pub data: Vec<T>,
 }
 
 /// Returns true if `input` length is between `range.0` (inclusive) and `range.1` (inclusive).

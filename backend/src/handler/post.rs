@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 use axum_extra::{
@@ -11,12 +13,13 @@ use tracing::warn;
 
 use crate::{
     dto::{
-        Validate,
+        PaginationParams, PaginationResponse, Validate,
+        comment::CommentResponse,
         post::{NewPostRequest, PostResponse},
     },
     error::AppResult,
     server::{session::verify_session, state::AppState},
-    service::post::{create_post, retrieve_post},
+    service::post::{create_post, retrieve_comments, retrieve_post},
 };
 
 pub async fn post_post(
@@ -46,7 +49,14 @@ pub async fn get_post(
     }
 }
 
-// TODO: consider moving to posts.rs
-pub async fn get_posts(State(_state): State<AppState>) {
-    todo!()
+pub async fn get_comments(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+    Query(pagination): Query<HashMap<String, u32>>,
+) -> AppResult<(StatusCode, Json<PaginationResponse<CommentResponse>>)> {
+    let pagination = PaginationParams::from(pagination);
+    match retrieve_comments(state, id, pagination).await {
+        Ok(resp) => Ok((StatusCode::OK, Json(resp))),
+        Err(e) => Err(e),
+    }
 }

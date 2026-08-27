@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use axum::{
     Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 use axum_extra::{
@@ -11,12 +13,12 @@ use tracing::info;
 
 use crate::{
     dto::{
-        Validate,
+        PaginationParams, PaginationResponse, Validate,
         comment::{CommentResponse, NewCommentRequest},
     },
     error::AppResult,
     server::{session::verify_session, state::AppState},
-    service::comment::{create_comment, retrieve_comment},
+    service::comment::{create_comment, retrieve_comment, retrieve_replies},
 };
 
 pub async fn get_comment(
@@ -42,6 +44,18 @@ pub async fn post_comment(
             info!("{} commented on {}", res.owner, res.parent);
             Ok((StatusCode::CREATED, Json(res)))
         }
+        Err(e) => Err(e),
+    }
+}
+
+pub async fn get_replies(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+    Query(pagination): Query<HashMap<String, u32>>,
+) -> AppResult<(StatusCode, Json<PaginationResponse<CommentResponse>>)> {
+    let pagination = PaginationParams::from(pagination);
+    match retrieve_replies(state, id, pagination).await {
+        Ok(resp) => Ok((StatusCode::OK, Json(resp))),
         Err(e) => Err(e),
     }
 }

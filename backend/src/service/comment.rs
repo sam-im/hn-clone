@@ -1,9 +1,13 @@
 use deadpool_postgres::Object;
 
 use crate::{
-    dto::comment::{CommentResponse, NewCommentRequest},
+    dto::{
+        PaginationParams, PaginationResponse,
+        comment::{CommentResponse, NewCommentRequest},
+    },
     error::{AppError, AppResult},
     server::{session::Session, state::AppState},
+    service::comments::retrieve_comments_by_parent,
 };
 
 pub async fn create_comment(
@@ -51,6 +55,14 @@ pub async fn retrieve_comment(state: AppState, id: i32) -> AppResult<CommentResp
     let db = state.db.get().await?;
     let comment = query_comment(&db, id).await?;
     Ok(comment)
+}
+
+pub async fn retrieve_replies(
+    state: AppState,
+    id: i32,
+    pagination: PaginationParams,
+) -> AppResult<PaginationResponse<CommentResponse>> {
+    retrieve_comments_by_parent(state, id, pagination).await
 }
 
 async fn query_comment(db: &Object, id: i32) -> AppResult<CommentResponse> {
