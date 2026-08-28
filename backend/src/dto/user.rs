@@ -37,20 +37,20 @@ pub struct UpdateUserRequest {
 impl Validate for UpdateUserRequest {
     fn validate(&self) -> AppResult {
         if let OptionalField::Set(password) = &self.password {
-            validate_password(&password)?;
+            validate_password(password)?;
         }
 
-        if let OptionalField::Set(about) = &self.about {
-            if !is_valid_len(&about, &(None, Some(ABOUT_MAX_LEN))) {
-                return Err(AppError::InvalidInputError(format!(
-                    "About sections can not be larger than {ABOUT_MAX_LEN}."
-                )));
-            }
-            // TODO: further validate to prevent XSS attacks / consider escaping before using on the frontend
+        if let OptionalField::Set(about) = &self.about
+            && !is_valid_len(about, &(None, Some(ABOUT_MAX_LEN)))
+        {
+            return Err(AppError::InvalidInput(format!(
+                "About sections can not be larger than {ABOUT_MAX_LEN}."
+            )));
         }
+        // TODO: further validate to prevent XSS attacks / consider escaping before using on the frontend
 
         if let OptionalField::Set(pubkey) = &self.pubkey {
-            validate_pubkey(&pubkey)?;
+            validate_pubkey(pubkey)?;
         }
         Ok(())
     }
@@ -80,7 +80,7 @@ pub fn validate_username(username: &str) -> AppResult {
     // [a-z0-9"-"]{4,36}
     // size
     if !is_valid_len(username, &(Some(USERNAME_MIN_LEN), Some(USERNAME_MAX_LEN))) {
-        return Err(AppError::InvalidInputError(format!(
+        return Err(AppError::InvalidInput(format!(
             "Username length must be between {USERNAME_MIN_LEN} and {USERNAME_MAX_LEN} characters."
         )));
     }
@@ -91,7 +91,7 @@ pub fn validate_username(username: &str) -> AppResult {
         |c: &char| -> bool { c.eq(&'-') },
     ];
     if !is_valid_charset(username, &predicates) {
-        return Err(AppError::InvalidInputError(format!(
+        return Err(AppError::InvalidInput(format!(
             "Username must match: [a-z0-9\"-\"]{{{USERNAME_MIN_LEN},{USERNAME_MAX_LEN}}}"
         )));
     }
@@ -102,7 +102,7 @@ pub fn validate_password(password: &str) -> AppResult {
     // size
     let range = (Some(PASSWORD_MIN_LEN), Some(PASSWORD_MAX_LEN));
     if !is_valid_len(password, &range) {
-        return Err(AppError::InvalidInputError(format!(
+        return Err(AppError::InvalidInput(format!(
             "Password length must be between {PASSWORD_MIN_LEN} and {PASSWORD_MAX_LEN} characters."
         )));
     }
@@ -112,18 +112,18 @@ pub fn validate_password(password: &str) -> AppResult {
         |c: &char| -> bool { c.is_ascii_punctuation() },
     ];
     if !is_valid_charset(password, &predicates) {
-        return Err(AppError::InvalidInputError(format!(
-            "Passwords can only consist of alphanumeric and punctuation."
-        )));
+        return Err(AppError::InvalidInput(
+            "Passwords can only consist of alphanumeric and punctuation.".to_string(),
+        ));
     }
     // difficulty
     if !(password.contains(|c: char| c.is_numeric())
         && password.contains(|c: char| c.is_ascii_alphabetic())
         && password.contains(|c: char| c.is_ascii_punctuation()))
     {
-        return Err(AppError::InvalidInputError(format!(
-            "Passwords should contain at least one alphabetic, one numeric, and one punctuation character."
-        )));
+        return Err(AppError::InvalidInput(
+            "Passwords should contain at least one alphabetic, one numeric, and one punctuation character.".to_string()
+        ));
     }
     Ok(())
 }
@@ -134,7 +134,7 @@ pub fn validate_pubkey(pubkey: &str) -> AppResult {
     // size
     let range = (None, Some(PUBKEY_MAX_LEN));
     if !is_valid_len(pubkey, &range) {
-        return Err(AppError::InvalidInputError(format!(
+        return Err(AppError::InvalidInput(format!(
             "Public keys can not be larger than {PUBKEY_MAX_LEN}."
         )));
     }

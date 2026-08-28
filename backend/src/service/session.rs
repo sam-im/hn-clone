@@ -17,26 +17,29 @@ pub async fn create_session(state: AppState, req: SessionRequest) -> AppResult<S
     let rows = db.query(&statement, &[&req.username]).await?;
     let (user_id, phc): (i32, String) = match rows.first() {
         Some(row) => (row.get("_id"), row.get("_password_hash")),
-        None => return Err(AppError::AuthError("invalid input".to_string())),
+        None => return Err(AppError::Auth("invalid input".to_string())),
     };
 
     let phc = PasswordHash::new(&phc)?;
     let argon2 = Argon2::default();
     // NOTE: this call takes about 300-400ms
-    if let Err(_) = argon2.verify_password(&req.password.as_bytes(), &phc) {
-        return Err(AppError::AuthError("invalid input".to_string()));
+    if argon2
+        .verify_password(req.password.as_bytes(), &phc)
+        .is_err()
+    {
+        return Err(AppError::Auth("invalid input".to_string()));
     }
 
     let duration = Duration::from_mins(req.duration.into());
     let (token, session) = state.sessions.create_session(user_id, duration).await?;
 
-    Ok(SessionResponse::try_from((req.username, session, token))?)
+    SessionResponse::try_from((req.username, session, token))
 }
 
 pub async fn remove_session(state: AppState, token: TokenFromRequest) -> AppResult {
     match state.sessions.delete_session(&token.token).await? {
         Some(_) => Ok(()),
-        None => Err(AppError::ResourceNotFoundError),
+        None => Err(AppError::ResourceNotFound),
     }
 }
 
@@ -46,10 +49,10 @@ pub async fn retrieve_session(
 ) -> AppResult<SessionResponse> {
     let session = match state.sessions.get_session(&token.token).await? {
         Some(s) => s,
-        None => return Err(AppError::ResourceNotFoundError),
+        None => return Err(AppError::ResourceNotFound),
     };
     if session.is_expired() {
-        return Err(AppError::ResourceNotFoundError);
+        return Err(AppError::ResourceNotFound);
     }
     let db = state.db.get().await?;
     let statement = db
@@ -57,9 +60,5 @@ pub async fn retrieve_session(
         .await?;
     let row = db.query_one(&statement, &[&session.user_id]).await?;
     let username: String = row.get("_username");
-    Ok(SessionResponse::try_from((
-        username,
-        session,
-        token.token.to_string(),
-    ))?)
+    SessionResponse::try_from((username, session, token.token.to_string()))
 }

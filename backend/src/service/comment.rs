@@ -25,7 +25,7 @@ pub async fn create_comment(
         let row = tr.query_opt(&parent_stmt, &[&new_comment.parent]).await?;
         let _kind: String = match row {
             Some(p) => p.get("_type"),
-            None => return Err(AppError::InvalidInputError("invalid parent".to_string())),
+            None => return Err(AppError::InvalidInput("invalid parent".to_string())),
         };
     }
     let id: i32;
@@ -93,7 +93,7 @@ async fn query_comment(db: &Object, id: i32) -> AppResult<CommentResponse> {
 
     let comment = match db.query_opt(&comment_stmt, &[&id]).await? {
         Some(row) => CommentResponse::from(&row),
-        None => return Err(AppError::ResourceNotFoundError),
+        None => return Err(AppError::ResourceNotFound),
     };
     Ok(comment)
 }

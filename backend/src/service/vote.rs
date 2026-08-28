@@ -15,14 +15,14 @@ pub async fn add_vote(state: AppState, session: Session, item_id: i32) -> AppRes
         Ok(_) => Ok(()),
         Err(err) => {
             if let Some(db_err) = err.as_db_error() {
-                let app_err = match db_err.code() {
-                    &SqlState::UNIQUE_VIOLATION => AppError::ResourceNotModifiedError,
-                    &SqlState::FOREIGN_KEY_VIOLATION => AppError::ResourceNotFoundError,
-                    _ => AppError::DatabaseError(err),
+                let app_err = match *db_err.code() {
+                    SqlState::UNIQUE_VIOLATION => AppError::ResourceNotModified,
+                    SqlState::FOREIGN_KEY_VIOLATION => AppError::ResourceNotFound,
+                    _ => AppError::Database(err),
                 };
                 return Err(app_err);
             }
-            Err(AppError::DatabaseError(err))
+            Err(AppError::Database(err))
         }
     }
 }
@@ -34,13 +34,13 @@ pub async fn remove_vote(state: AppState, session: Session, item_id: i32) -> App
         .await?;
     match db.execute(&stmt, &[&item_id, &session.user_id]).await {
         Ok(n) => match n {
-            0 => Err(AppError::ResourceNotFoundError),
+            0 => Err(AppError::ResourceNotFound),
             1 => Ok(()),
             _ => {
                 error!("removed {} upvotes with a single request", n);
                 Ok(())
             }
         },
-        Err(e) => Err(AppError::DatabaseError(e)),
+        Err(e) => Err(AppError::Database(e)),
     }
 }

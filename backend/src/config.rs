@@ -35,7 +35,7 @@ pub struct Config {
 
 impl Config {
     pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
-        let custom_var = |key: &str, default: Option<&str>| -> String {
+        let try_env_var = |key: &str, default: Option<&str>| -> String {
             match var(key) {
                 Ok(v) => v,
                 Err(_) => match default {
@@ -47,13 +47,13 @@ impl Config {
                 },
             }
         };
-        let server_addr = IpAddr::from_str(custom_var("SERVER_ADDR", Some("127.0.0.1")).as_ref())?;
-        let server_port = u16::from_str(custom_var("SERVER_PORT", Some("3000")).as_ref())?;
-        let db_addr = IpAddr::from_str(custom_var("DB_ADDR", Some("127.0.0.1")).as_ref())?;
-        let db_name = custom_var("DB_NAME", None).into();
-        let db_user = custom_var("DB_USER", None).into();
-        let db_pass = custom_var("DB_PASS", None).into();
-        let db_pool_size = usize::from_str(custom_var("DB_POOL_SIZE", Some("16")).as_ref())?;
+        let server_addr = IpAddr::from_str(try_env_var("SERVER_ADDR", Some("127.0.0.1")).as_ref())?;
+        let server_port = u16::from_str(try_env_var("SERVER_PORT", Some("3000")).as_ref())?;
+        let db_addr = IpAddr::from_str(try_env_var("DB_ADDR", Some("127.0.0.1")).as_ref())?;
+        let db_name = try_env_var("DB_NAME", None);
+        let db_user = try_env_var("DB_USER", None);
+        let db_pass = try_env_var("DB_PASS", None);
+        let db_pool_size = usize::from_str(try_env_var("DB_POOL_SIZE", Some("16")).as_ref())?;
         Ok(Self {
             server_addr,
             server_port,

@@ -32,7 +32,7 @@ pub async fn create_post(
     let rows = tr.query(&statement, &[&session.user_id]).await?;
     let _username: String = match rows.first() {
         Some(u) => u.get("_username"),
-        None => return Err(AppError::AuthError("TODO".to_string())),
+        None => return Err(AppError::Auth("TODO".to_string())),
     };
 
     let statement = tr
@@ -43,7 +43,7 @@ pub async fn create_post(
         Some(r) => r.get("_id"),
         None => {
             // TODO: add a better error type for this case
-            return Err(AppError::InvalidInputError(
+            return Err(AppError::InvalidInput(
                 "TODO: failed to insert item".to_string(),
             ));
         }
@@ -94,7 +94,7 @@ async fn query_post(db: &Object, id: i32) -> AppResult<PostResponse> {
 
     let post = match db.query_opt(&post_stmt, &[&id]).await? {
         Some(row) => PostResponse::from(&row),
-        None => return Err(AppError::ResourceNotFoundError),
+        None => return Err(AppError::ResourceNotFound),
     };
     Ok(post)
 }

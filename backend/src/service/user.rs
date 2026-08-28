@@ -21,7 +21,7 @@ pub async fn register_user(state: AppState, req: RegisterUserRequest) -> AppResu
         .await?;
     let result = transaction.query(&check_stmt, &[&req.username]).await?;
     if !(result.is_empty()) {
-        return Err(AppError::ResourceExistsError);
+        return Err(AppError::ResourceExists);
     }
 
     let insert_stmt = transaction
@@ -50,7 +50,7 @@ pub async fn retrieve_user(state: AppState, username: &str) -> AppResult<UserRes
     let rows = db.query(&statement, &[&username]).await?;
     match rows.first() {
         Some(r) => Ok(UserResponse::from(r)),
-        None => Err(AppError::ResourceNotFoundError),
+        None => Err(AppError::ResourceNotFound),
     }
 }
 
@@ -70,7 +70,7 @@ pub async fn update_user(
     let session_username: String = match rows.first() {
         Some(r) => r.get("_username"),
         None => {
-            return Err(AppError::AuthError(format!(
+            return Err(AppError::Auth(format!(
                 "user_id {} no longer exists",
                 session.user_id
             )));
@@ -78,7 +78,7 @@ pub async fn update_user(
     };
 
     if session_username != username {
-        return Err(AppError::AuthError(format!(
+        return Err(AppError::Auth(format!(
             " {} is not authorized to modify {}",
             session.user_id, username
         )));

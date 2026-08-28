@@ -65,14 +65,8 @@ pub fn is_valid_len(input: &str, range: &(Option<usize>, Option<usize>)) -> bool
 }
 
 /// Returns true if at least one predicate in `predicates` returns true for all characters in `input`.
-pub fn is_valid_charset<P: Fn(&char) -> bool>(input: &str, predicates: &Vec<P>) -> bool {
+pub fn is_valid_charset<P: Fn(&char) -> bool>(input: &str, predicates: &[P]) -> bool {
     input
         .chars()
-        .map(|c: char| {
-            predicates
-                .iter()
-                .map(|predicate: &P| predicate(&c))
-                .any(|r: bool| r)
-        })
-        .all(|r: bool| r)
+        .all(|c: char| predicates.iter().any(|predicate: &P| predicate(&c)))
 }

@@ -47,7 +47,7 @@ pub async fn retrieve_comments_by_parent(
         )
         .await?
         .iter()
-        .map(|r| CommentResponse::from(r))
+        .map(CommentResponse::from)
         .collect::<Vec<CommentResponse>>();
 
     let offset = if comments.len() == pagination.limit as usize {

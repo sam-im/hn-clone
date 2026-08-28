@@ -23,7 +23,7 @@ impl Validate for NewCommentRequest {
             char::is_ascii_whitespace,
         ];
         if !is_valid_charset(&self.content, &predicates) {
-            return Err(AppError::InvalidInputError("".to_string()));
+            return Err(AppError::InvalidInput("".to_string()));
         }
         Ok(())
     }

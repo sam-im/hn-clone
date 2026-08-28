@@ -18,13 +18,13 @@ impl Validate for NewPostRequest {
         // size
         let range = (None, (Some(config::POST_TITLE_LEN)));
         if !is_valid_len(&self.title, &range) {
-            return Err(AppError::InvalidInputError(format!(
+            return Err(AppError::InvalidInput(format!(
                 "Post title can not be larger than {}.",
                 config::POST_TITLE_LEN
             )));
         }
         if !is_valid_len(&self.title, &range) {
-            return Err(AppError::InvalidInputError(format!(
+            return Err(AppError::InvalidInput(format!(
                 "Post content can not be larger than {}.",
                 config::POST_CONTENT_LEN
             )));
@@ -36,14 +36,14 @@ impl Validate for NewPostRequest {
             char::is_ascii_whitespace,
         ];
         if !is_valid_charset(&self.title, &predicates) {
-            return Err(AppError::InvalidInputError(format!(
-                "Invalid character(s) in post title."
-            )));
+            return Err(AppError::InvalidInput(
+                "Invalid character(s) in post title.".to_string(),
+            ));
         }
         if !is_valid_charset(&self.content, &predicates) {
-            return Err(AppError::InvalidInputError(format!(
-                "Invalid character(s) in post body."
-            )));
+            return Err(AppError::InvalidInput(
+                "Invalid character(s) in post body.".to_string(),
+            ));
         }
         Ok(())
     }

@@ -11,32 +11,32 @@ pub type AppResult<T = ()> = std::result::Result<T, AppError>;
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("{0}")]
-    InvalidInputError(String),
+    InvalidInput(String),
     #[error(transparent)]
-    DatabasePoolError(#[from] deadpool_postgres::PoolError),
+    DatabasePool(#[from] deadpool_postgres::PoolError),
     #[error(transparent)]
-    DatabaseError(#[from] tokio_postgres::Error),
+    Database(#[from] tokio_postgres::Error),
     #[error("hash error: {0}")]
-    HashError(String),
+    Hash(String),
     #[error("resource already exists")]
-    ResourceExistsError, // TODO: capture info about the resource
+    ResourceExists, // TODO: capture info about the resource
     #[error("resource not found")]
-    ResourceNotFoundError, // TODO: capture info about the resource
+    ResourceNotFound, // TODO: capture info about the resource
     #[error("resource not modified")]
-    ResourceNotModifiedError, // TODO: capture info about the resource
+    ResourceNotModified, // TODO: capture info about the resource
     #[error("sessions error: {0}")]
-    SessionError(String),
+    Session(String),
     #[error("auth error: {0}")]
-    AuthError(String),
+    Auth(String),
     #[error(transparent)]
-    PgpError(#[from] pgp::errors::Error),
+    Pgp(#[from] pgp::errors::Error),
     #[error(transparent)]
-    SystemTimeError(#[from] std::time::SystemTimeError),
+    SystemTime(#[from] std::time::SystemTimeError),
 }
 
 impl From<argon2::password_hash::Error> for AppError {
     fn from(value: argon2::password_hash::Error) -> Self {
-        AppError::HashError(value.to_string())
+        AppError::Hash(value.to_string())
     }
 }
 
@@ -44,67 +44,67 @@ impl AppError {
     pub fn response(self) -> (StatusCode, AppResponseError) {
         let message = self.to_string();
         let (kind, code, details, status_code) = match self {
-            AppError::InvalidInputError(_) => (
+            AppError::InvalidInput(_) => (
                 "INVALID_INPUT_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::BAD_REQUEST,
             ),
-            AppError::DatabasePoolError(_) => (
+            AppError::DatabasePool(_) => (
                 "DATABASE_POOL_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::INTERNAL_SERVER_ERROR,
             ),
-            AppError::DatabaseError(_) => (
+            AppError::Database(_) => (
                 "DATABASE_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::INTERNAL_SERVER_ERROR,
             ),
-            AppError::HashError(_) => (
+            AppError::Hash(_) => (
                 "HASH_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::INTERNAL_SERVER_ERROR,
             ),
-            AppError::ResourceExistsError => (
+            AppError::ResourceExists => (
                 "RESOURCE_EXISTS_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::CONFLICT,
             ),
-            AppError::SessionError(_) => (
+            AppError::Session(_) => (
                 "SESSION_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::INTERNAL_SERVER_ERROR,
             ),
-            AppError::AuthError(_) => (
+            AppError::Auth(_) => (
                 "AUTH_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::UNAUTHORIZED,
             ),
-            AppError::PgpError(_) => (
+            AppError::Pgp(_) => (
                 "PGP_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::BAD_REQUEST,
             ),
-            AppError::SystemTimeError(_) => (
+            AppError::SystemTime(_) => (
                 "SYSTEM_TIME_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::INTERNAL_SERVER_ERROR,
             ),
-            AppError::ResourceNotFoundError => (
+            AppError::ResourceNotFound => (
                 "RESOURCE_NOT_FOUND_ERROR".to_string(),
                 None,
                 vec![],
                 StatusCode::NOT_FOUND,
             ),
-            AppError::ResourceNotModifiedError => (
+            AppError::ResourceNotModified => (
                 "RESOURCE_NOT_MODIFIED".to_string(),
                 None,
                 vec![],

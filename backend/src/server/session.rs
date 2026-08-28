@@ -22,15 +22,17 @@ use crate::{
     error::{AppError, AppResult},
 };
 
+/// Returns an error if the provided `token` doesn't exists or is expired,
+/// otherwise returns a `Session`.
 pub async fn verify_session(sessions: &Sessions, token: &str) -> AppResult<Session> {
     let session = match sessions.get_session(token).await? {
         Some(s) => {
             if s.is_expired() {
-                return Err(AppError::AuthError("expired token".to_string()));
+                return Err(AppError::Auth("expired token".to_string()));
             }
             s
         }
-        None => return Err(AppError::AuthError("invalid token".to_string())),
+        None => return Err(AppError::Auth("invalid token".to_string())),
     };
     Ok(session)
 }
@@ -73,7 +75,7 @@ struct SessionStore {
 }
 
 impl SessionStore {
-    fn new(rx: mpsc::Receiver<SessionMsg>) -> Result<JoinHandle<()>, Box<dyn std::error::Error>> {
+    fn run(rx: mpsc::Receiver<SessionMsg>) -> Result<JoinHandle<()>, Box<dyn std::error::Error>> {
         let inner = HashMap::new();
         let rng = StdRng::try_from_rng(&mut SysRng)?;
         let last_cleanup = SystemTime::now();
@@ -87,7 +89,7 @@ impl SessionStore {
         Ok(handle)
     }
 
-    fn cleanup(&mut self) {
+    fn cleanup_expired(&mut self) {
         let now = SystemTime::now();
         let mut count = 0;
         if self.last_cleanup + SESSION_CLEANUP_INTERVAL < now {
@@ -123,7 +125,7 @@ impl SessionStore {
                     match msg {
                         SessionMsg::New(user_id, duration, tx) => {
                             // potentially remove expired entries
-                            self.cleanup();
+                            self.cleanup_expired();
 
                             // remove existing session, if any
                             if let Some(key) = self
@@ -172,7 +174,7 @@ pub struct Sessions {
 impl Sessions {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let (tx, rx) = mpsc::channel(SESSION_CHANNEL_CAPACITY);
-        let _handle = Arc::new(SessionStore::new(rx)?);
+        let _handle = Arc::new(SessionStore::run(rx)?);
         Ok(Self { tx, _handle })
     }
 
@@ -188,8 +190,8 @@ impl Sessions {
         self.tx
             .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
             .await
-            .map_err(|e| AppError::SessionError(e.to_string()))?;
-        rx.await.map_err(|e| AppError::SessionError(e.to_string()))
+            .map_err(|e| AppError::Session(e.to_string()))?;
+        rx.await.map_err(|e| AppError::Session(e.to_string()))
     }
 
     pub async fn get_session(&self, token: &str) -> AppResult<Option<Session>> {
@@ -198,8 +200,8 @@ impl Sessions {
         self.tx
             .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
             .await
-            .map_err(|e| AppError::SessionError(e.to_string()))?;
-        rx.await.map_err(|e| AppError::SessionError(e.to_string()))
+            .map_err(|e| AppError::Session(e.to_string()))?;
+        rx.await.map_err(|e| AppError::Session(e.to_string()))
     }
 
     pub async fn delete_session(&self, token: &str) -> AppResult<Option<Session>> {
@@ -208,7 +210,7 @@ impl Sessions {
         self.tx
             .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
             .await
-            .map_err(|e| AppError::SessionError(e.to_string()))?;
-        rx.await.map_err(|e| AppError::SessionError(e.to_string()))
+            .map_err(|e| AppError::Session(e.to_string()))?;
+        rx.await.map_err(|e| AppError::Session(e.to_string()))
     }
 }

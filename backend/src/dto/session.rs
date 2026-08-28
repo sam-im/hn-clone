@@ -29,7 +29,7 @@ impl Validate for SessionRequest {
         validate_password(&self.password)?;
 
         if !(SESSION_DURATIONS.contains(&self.duration)) {
-            return Err(AppError::InvalidInputError(
+            return Err(AppError::InvalidInput(
                 "duration must be one of {DURATIONS:?} minutes".to_string(),
             ));
         }
@@ -45,12 +45,10 @@ pub struct TokenFromRequest {
 impl Validate for TokenFromRequest {
     fn validate(&self) -> AppResult {
         if self.token.len() != SESSION_TOKEN_LEN {
-            return Err(AppError::InvalidInputError(
-                "Invalid token length.".to_string(),
-            ));
+            return Err(AppError::InvalidInput("Invalid token length.".to_string()));
         }
         if self.token.contains(|c: char| !c.is_ascii_alphanumeric()) {
-            return Err(AppError::InvalidInputError(
+            return Err(AppError::InvalidInput(
                 "Invalid characters in token.".to_string(),
             ));
         }
@@ -61,12 +59,10 @@ impl Validate for TokenFromRequest {
 impl Validate for Authorization<Bearer> {
     fn validate(&self) -> AppResult {
         if self.token().len() != SESSION_TOKEN_LEN {
-            return Err(AppError::InvalidInputError(
-                "Invalid token length.".to_string(),
-            ));
+            return Err(AppError::InvalidInput("Invalid token length.".to_string()));
         }
         if self.token().contains(|c: char| !c.is_ascii_alphanumeric()) {
-            return Err(AppError::InvalidInputError(
+            return Err(AppError::InvalidInput(
                 "Invalid characters in token.".to_string(),
             ));
         }
