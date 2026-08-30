@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 
 pub trait Validate {
     fn validate(&self) -> AppResult;
@@ -30,17 +30,28 @@ pub enum OptionalField<T> {
     Unspecified,
 }
 
-#[derive(Deserialize)]
 pub struct PaginationParams {
     pub offset: u32,
     pub limit: u32,
 }
 
-impl From<HashMap<String, u32>> for PaginationParams {
-    fn from(value: HashMap<String, u32>) -> Self {
-        let offset = value.get("offset").unwrap_or(&0).to_owned();
-        let limit = value.get("limit").unwrap_or(&20).to_owned();
-        Self { offset, limit }
+impl TryFrom<&HashMap<String, String>> for PaginationParams {
+    type Error = AppError;
+
+    fn try_from(value: &HashMap<String, String>) -> Result<Self, Self::Error> {
+        let offset = match value.get("offset") {
+            Some(o) => o
+                .parse::<u32>()
+                .map_err(|e| AppError::InvalidInput(e.to_string()))?,
+            None => 0,
+        };
+        let limit = match value.get("limit") {
+            Some(l) => l
+                .parse::<u32>()
+                .map_err(|e| AppError::InvalidInput(e.to_string()))?,
+            None => 20,
+        };
+        Ok(Self { offset, limit })
     }
 }
 

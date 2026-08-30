@@ -52,9 +52,10 @@ pub async fn get_post(
 pub async fn get_comments(
     State(state): State<AppState>,
     Path(id): Path<i32>,
-    Query(pagination): Query<HashMap<String, u32>>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> AppResult<(StatusCode, Json<PaginationResponse<CommentResponse>>)> {
-    let pagination = PaginationParams::from(pagination);
+    let pagination = PaginationParams::try_from(&params)?;
+
     match retrieve_comments(state, id, pagination).await {
         Ok(resp) => Ok((StatusCode::OK, Json(resp))),
         Err(e) => Err(e),
