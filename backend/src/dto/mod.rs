@@ -61,6 +61,63 @@ pub struct PaginationResponse<T> {
     pub data: Vec<T>,
 }
 
+pub enum SortMethod {
+    Date,
+}
+
+impl SortMethod {
+    pub fn to_sql_str(&self) -> &str {
+        match self {
+            SortMethod::Date => "_item._created_at",
+        }
+    }
+}
+
+pub enum SortOrder {
+    Asc,
+    Desc,
+}
+
+impl SortOrder {
+    pub fn to_sql_str(&self) -> &str {
+        match self {
+            SortOrder::Asc => "ASC",
+            SortOrder::Desc => "DESC",
+        }
+    }
+}
+
+pub struct SortingParams {
+    pub sort_by: SortMethod,
+    pub sort_order: SortOrder,
+}
+
+impl TryFrom<&HashMap<String, String>> for SortingParams {
+    type Error = AppError;
+
+    fn try_from(value: &HashMap<String, String>) -> Result<Self, Self::Error> {
+        let sort_by = match value.get("sort_by") {
+            Some(m) => match m.as_str() {
+                "date" => SortMethod::Date,
+                _ => return Err(AppError::InvalidInput("invalid sorting method".to_string())),
+            },
+            None => SortMethod::Date,
+        };
+        let sort_order = match value.get("sort_order") {
+            Some(o) => match o.as_str() {
+                "asc" => SortOrder::Asc,
+                "desc" => SortOrder::Desc,
+                _ => return Err(AppError::InvalidInput("invalid sorting method".to_string())),
+            },
+            None => SortOrder::Desc,
+        };
+        Ok(Self {
+            sort_by,
+            sort_order,
+        })
+    }
+}
+
 /// Returns true if `input` length is between `range.0` (inclusive) and `range.1` (inclusive).
 pub fn is_valid_len(input: &str, range: &(Option<usize>, Option<usize>)) -> bool {
     let len = input.len();
