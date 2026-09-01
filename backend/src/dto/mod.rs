@@ -63,12 +63,14 @@ pub struct PaginationResponse<T> {
 
 pub enum SortMethod {
     Date,
+    Vote,
 }
 
 impl SortMethod {
-    pub fn to_sql_str(&self) -> &str {
+    pub fn to_sql_str(&self) -> &'static str {
         match self {
             SortMethod::Date => "_item._created_at",
+            SortMethod::Vote => "_upvotes",
         }
     }
 }
@@ -79,7 +81,7 @@ pub enum SortOrder {
 }
 
 impl SortOrder {
-    pub fn to_sql_str(&self) -> &str {
+    pub fn to_sql_str(&self) -> &'static str {
         match self {
             SortOrder::Asc => "ASC",
             SortOrder::Desc => "DESC",
@@ -99,6 +101,7 @@ impl TryFrom<&HashMap<String, String>> for SortingParams {
         let sort_by = match value.get("sort_by") {
             Some(m) => match m.as_str() {
                 "date" => SortMethod::Date,
+                "vote" => SortMethod::Vote,
                 _ => return Err(AppError::InvalidInput("invalid sorting method".to_string())),
             },
             None => SortMethod::Date,
@@ -107,7 +110,7 @@ impl TryFrom<&HashMap<String, String>> for SortingParams {
             Some(o) => match o.as_str() {
                 "asc" => SortOrder::Asc,
                 "desc" => SortOrder::Desc,
-                _ => return Err(AppError::InvalidInput("invalid sorting method".to_string())),
+                _ => return Err(AppError::InvalidInput("invalid sorting order".to_string())),
             },
             None => SortOrder::Desc,
         };

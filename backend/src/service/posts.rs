@@ -10,9 +10,7 @@ pub async fn retrieve_posts(
     sorting: SortingParams,
 ) -> AppResult<PaginationResponse<PostResponse>> {
     let db = state.db.get().await?;
-    // SAFETY of the raw statement:
-    // - both `sorting.sort_by` and `sorting.sort_order` are enums and,
-    // - both calls to `to_sql_str(&self)` return `&'static str`
+    // SAFETY: both `to_sql_str(&self)` return a &'static str
     let raw_stmt = format!(
         "SELECT
             _item._id AS _id,
