@@ -33,7 +33,7 @@ pub async fn retrieve_posts(
         FROM _item
             INNER JOIN _post ON _item._id = _post._id
             INNER JOIN _user ON _user._id = _item._owner
-        ORDER BY {} {}
+        ORDER BY {} {}, _item._created_at DESC
         LIMIT $1 OFFSET $2;",
         sorting.sort_by.to_sql_str(),
         sorting.sort_order.to_sql_str()
