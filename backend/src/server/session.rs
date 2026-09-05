@@ -9,7 +9,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 use tokio::{
-    sync::{mpsc, oneshot},
+    sync::{Mutex, mpsc, oneshot},
     task::JoinHandle,
 };
 use tracing::info;
@@ -35,6 +35,59 @@ pub async fn verify_session(sessions: &Sessions, token: &str) -> AppResult<Sessi
         None => return Err(AppError::Auth("invalid token".to_string())),
     };
     Ok(session)
+}
+
+#[derive(Clone)]
+pub struct Sessions {
+    tx: mpsc::Sender<SessionMsg>,
+    _handle: Arc<JoinHandle<()>>,
+}
+
+impl Sessions {
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let store = SessionStore::new()?;
+        let tx = store.tx.clone();
+        let _handle = Arc::new(store.run());
+        Ok(Self { tx, _handle })
+    }
+
+    /// For a given user_id and duration create and return the token and the
+    /// associated `Session` object.
+    pub async fn create_session(
+        &self,
+        user_id: i32,
+        duration: Duration,
+    ) -> AppResult<(String, Session)> {
+        let (tx, rx) = oneshot::channel();
+        let msg = SessionMsg::New(user_id, duration, tx);
+        self.tx
+            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
+            .await
+            .map_err(|e| AppError::Session(e.to_string()))?;
+        rx.await.map_err(|e| AppError::Session(e.to_string()))
+    }
+
+    /// Find and return the associated `Session` object for `token`, if it exists.
+    pub async fn get_session(&self, token: &str) -> AppResult<Option<Session>> {
+        let (tx, rx) = oneshot::channel();
+        let msg = SessionMsg::Get(token.to_string(), tx);
+        self.tx
+            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
+            .await
+            .map_err(|e| AppError::Session(e.to_string()))?;
+        rx.await.map_err(|e| AppError::Session(e.to_string()))
+    }
+
+    /// Remove the `Session` associated with `token`.
+    pub async fn delete_session(&self, token: &str) -> AppResult<Option<Session>> {
+        let (tx, rx) = oneshot::channel();
+        let msg = SessionMsg::Del(token.to_string(), tx);
+        self.tx
+            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
+            .await
+            .map_err(|e| AppError::Session(e.to_string()))?;
+        rx.await.map_err(|e| AppError::Session(e.to_string()))
+    }
 }
 
 /// Session Data
@@ -63,30 +116,37 @@ impl Session {
 
 enum SessionMsg {
     New(i32, Duration, oneshot::Sender<(String, Session)>),
+    Insert((String, Session), oneshot::Sender<(String, Session)>),
     Get(String, oneshot::Sender<Option<Session>>),
     Del(String, oneshot::Sender<Option<Session>>),
 }
 
 struct SessionStore {
     inner: HashMap<String, Session>,
-    rng: StdRng,
+    tx: mpsc::Sender<SessionMsg>,
     rx: mpsc::Receiver<SessionMsg>,
+    rng: Arc<Mutex<StdRng>>,
     last_cleanup: SystemTime,
 }
 
 impl SessionStore {
-    fn run(rx: mpsc::Receiver<SessionMsg>) -> Result<JoinHandle<()>, Box<dyn std::error::Error>> {
+    fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let inner = HashMap::new();
-        let rng = StdRng::try_from_rng(&mut SysRng)?;
+        let (tx, rx) = mpsc::channel(SESSION_CHANNEL_CAPACITY);
+        let rng = Arc::new(Mutex::new(StdRng::try_from_rng(&mut SysRng)?));
         let last_cleanup = SystemTime::now();
-        let store = Self {
+
+        Ok(Self {
             inner,
-            rng,
+            tx,
             rx,
+            rng,
             last_cleanup,
-        };
-        let handle = tokio::spawn(store.event_loop());
-        Ok(handle)
+        })
+    }
+
+    fn run(self) -> JoinHandle<()> {
+        tokio::spawn(self.event_loop())
     }
 
     fn cleanup_expired(&mut self) {
@@ -110,15 +170,8 @@ impl SessionStore {
         }
     }
 
-    fn generate_token(&mut self) -> String {
-        (&mut self.rng)
-            .sample_iter(&Alphanumeric)
-            .take(SESSION_TOKEN_LEN)
-            .map(char::from)
-            .collect()
-    }
-
     async fn event_loop(mut self) {
+        info!("SessionStore has started.");
         loop {
             match self.rx.recv().await {
                 Some(msg) => {
@@ -137,13 +190,27 @@ impl SessionStore {
                                 self.inner.remove(&key);
                             }
 
-                            // create and return the new token
-                            let session = Session::new(user_id, duration);
-                            let token = self.generate_token();
+                            // move token generation to a blocking thread to
+                            // avoid stalling the event-loop and/or async runtime
+                            let self_tx = self.tx.clone();
+                            let rng = self.rng.clone();
+                            tokio::task::spawn_blocking(move || {
+                                let session = Session::new(user_id, duration);
+                                let token = rng
+                                    .blocking_lock()
+                                    .sample_iter(&Alphanumeric)
+                                    .take(SESSION_TOKEN_LEN)
+                                    .map(char::from)
+                                    .collect();
+
+                                let msg = SessionMsg::Insert((token, session), tx);
+                                let _ = self_tx.blocking_send(msg);
+                            });
+                        }
+                        SessionMsg::Insert((token, session), tx) => {
                             self.inner.insert(token.clone(), session.clone());
                             let _ = tx.send((token, session));
                         }
-
                         SessionMsg::Get(token, tx) => {
                             let _ = tx.send(self.inner.get(&token).map(|s| s.to_owned()));
                         }
@@ -162,55 +229,5 @@ impl SessionStore {
                 }
             }
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct Sessions {
-    tx: mpsc::Sender<SessionMsg>,
-    _handle: Arc<JoinHandle<()>>,
-}
-
-impl Sessions {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let (tx, rx) = mpsc::channel(SESSION_CHANNEL_CAPACITY);
-        let _handle = Arc::new(SessionStore::run(rx)?);
-        Ok(Self { tx, _handle })
-    }
-
-    /// For a given user_id and duration create and return the token and the
-    /// associated `Session` object.
-    pub async fn create_session(
-        &self,
-        user_id: i32,
-        duration: Duration,
-    ) -> AppResult<(String, Session)> {
-        let (tx, rx) = oneshot::channel();
-        let msg = SessionMsg::New(user_id, duration, tx);
-        self.tx
-            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
-            .await
-            .map_err(|e| AppError::Session(e.to_string()))?;
-        rx.await.map_err(|e| AppError::Session(e.to_string()))
-    }
-
-    pub async fn get_session(&self, token: &str) -> AppResult<Option<Session>> {
-        let (tx, rx) = oneshot::channel();
-        let msg = SessionMsg::Get(token.to_string(), tx);
-        self.tx
-            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
-            .await
-            .map_err(|e| AppError::Session(e.to_string()))?;
-        rx.await.map_err(|e| AppError::Session(e.to_string()))
-    }
-
-    pub async fn delete_session(&self, token: &str) -> AppResult<Option<Session>> {
-        let (tx, rx) = oneshot::channel();
-        let msg = SessionMsg::Del(token.to_string(), tx);
-        self.tx
-            .send_timeout(msg, SESSION_CHANNEL_TIMEOUT)
-            .await
-            .map_err(|e| AppError::Session(e.to_string()))?;
-        rx.await.map_err(|e| AppError::Session(e.to_string()))
     }
 }
