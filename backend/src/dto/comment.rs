@@ -3,11 +3,12 @@ use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 
 use crate::{
+    config,
     dto::is_valid_charset,
     error::{AppError, AppResult},
 };
 
-use super::Validate;
+use super::{Validate, is_valid_len};
 
 #[derive(Deserialize)]
 pub struct NewCommentRequest {
@@ -17,13 +18,23 @@ pub struct NewCommentRequest {
 
 impl Validate for NewCommentRequest {
     fn validate(&self) -> AppResult {
+        let range = (None, Some(config::COMMENT_CONTENT_MAX_LEN));
+        if !is_valid_len(&self.content, &range) {
+            return Err(AppError::InvalidInput(format!(
+                "Comments can not be larger than {} characters.",
+                config::COMMENT_CONTENT_MAX_LEN
+            )));
+        }
+
         let predicates = vec![
             char::is_ascii_alphanumeric,
             char::is_ascii_punctuation,
             char::is_ascii_whitespace,
         ];
         if !is_valid_charset(&self.content, &predicates) {
-            return Err(AppError::InvalidInput("".to_string()));
+            return Err(AppError::InvalidInput(
+                "Invalid character(s) in comment content.".to_string(),
+            ));
         }
         Ok(())
     }

@@ -23,8 +23,6 @@ pub struct SessionRequest {
 
 impl Validate for SessionRequest {
     fn validate(&self) -> AppResult {
-        // duration options: 1-hour, 8-hours, 1-day, and 1-week
-
         validate_username(&self.username)?;
         validate_password(&self.password)?;
 
@@ -59,11 +57,11 @@ impl Validate for TokenFromRequest {
 impl Validate for Authorization<Bearer> {
     fn validate(&self) -> AppResult {
         if self.token().len() != SESSION_TOKEN_LEN {
-            return Err(AppError::InvalidInput("Invalid token length.".to_string()));
+            return Err(AppError::InvalidInput("invalid token length.".to_string()));
         }
         if self.token().contains(|c: char| !c.is_ascii_alphanumeric()) {
             return Err(AppError::InvalidInput(
-                "Invalid characters in token.".to_string(),
+                "invalid characters in token.".to_string(),
             ));
         }
         Ok(())

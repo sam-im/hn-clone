@@ -10,17 +10,22 @@ pub const USERNAME_MAX_LEN: usize = 36;
 pub const PASSWORD_MIN_LEN: usize = 8;
 pub const PASSWORD_MAX_LEN: usize = 64;
 pub const PUBKEY_MAX_LEN: usize = 64 * 1024;
-/// Allowed length of the about section in user profiles.
 pub const ABOUT_MAX_LEN: usize = 256;
+
+pub const POST_TITLE_MIN_LEN: usize = 4;
+pub const POST_TITLE_MAX_LEN: usize = 256;
+pub const POST_CONTENT_MAX_LEN: usize = 2048;
+
+pub const COMMENT_CONTENT_MAX_LEN: usize = 2048;
+
 /// Allowed durations for session expiry in minutes.
 pub const SESSION_DURATIONS: &[u32] = &[60, 8 * 60, 24 * 60, 7 * 24 * 60];
-/// Length of the randonmly generated token length.
+/// Length of the randonmly generated session token.
 pub const SESSION_TOKEN_LEN: usize = 64;
 pub const SESSION_CLEANUP_INTERVAL: Duration = Duration::from_hours(1);
 pub const SESSION_CHANNEL_CAPACITY: usize = 256;
 pub const SESSION_CHANNEL_TIMEOUT: Duration = Duration::from_secs(5);
-pub const POST_TITLE_LEN: usize = 256;
-pub const POST_CONTENT_LEN: usize = 2048;
+
 pub const POPULAR_POSTS_UPDATE_INTERVAL: Duration = Duration::from_hours(1);
 pub const POPULAR_POSTS_CHANNEL_CAPACITY: usize = 256;
 pub const POPULAR_POSTS_CHANNEL_TIMEOUT: Duration = Duration::from_secs(5);

@@ -16,19 +16,25 @@ pub struct NewPostRequest {
 impl Validate for NewPostRequest {
     fn validate(&self) -> AppResult {
         // size
-        let range = (None, (Some(config::POST_TITLE_LEN)));
+        let range = (
+            (Some(config::POST_TITLE_MIN_LEN)),
+            (Some(config::POST_TITLE_MAX_LEN)),
+        );
         if !is_valid_len(&self.title, &range) {
             return Err(AppError::InvalidInput(format!(
-                "Post title can not be larger than {}.",
-                config::POST_TITLE_LEN
+                "Post title must be between {} and {} characters.",
+                config::POST_TITLE_MIN_LEN,
+                config::POST_TITLE_MAX_LEN
             )));
         }
-        if !is_valid_len(&self.title, &range) {
+        let range = (None, (Some(config::POST_CONTENT_MAX_LEN)));
+        if !is_valid_len(&self.content, &range) {
             return Err(AppError::InvalidInput(format!(
                 "Post content can not be larger than {}.",
-                config::POST_CONTENT_LEN
+                config::POST_CONTENT_MAX_LEN
             )));
         }
+
         // char set
         let predicates = vec![
             char::is_ascii_alphanumeric,
