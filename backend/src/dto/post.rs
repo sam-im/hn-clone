@@ -49,7 +49,7 @@ impl Validate for NewPostRequest {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct PostResponse {
     pub id: i32,
     pub created_at: i64,

@@ -7,6 +7,7 @@ mod router;
 mod server;
 mod service;
 
+use server::popular::PopularPosts;
 use server::session::Sessions;
 use tracing::info;
 
@@ -26,7 +27,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let db = Database::new(&config)?;
     db.get().await?.check_connection().await?;
     let sessions = Sessions::new()?;
-    let state = AppState::new(&config, db, sessions);
+    let popular_posts = PopularPosts::new(db.clone())?;
+    let state = AppState::new(&config, db, sessions, popular_posts);
 
     let router = create_router(state);
 

@@ -30,6 +30,7 @@ pub enum OptionalField<T> {
     Unspecified,
 }
 
+#[derive(Clone, Copy)]
 pub struct PaginationParams {
     pub offset: u32,
     pub limit: u32,
@@ -64,6 +65,7 @@ pub struct PaginationResponse<T> {
 pub enum SortMethod {
     Date,
     Vote,
+    Popular,
 }
 
 impl SortMethod {
@@ -71,6 +73,7 @@ impl SortMethod {
         match self {
             SortMethod::Date => "_item._created_at",
             SortMethod::Vote => "_upvotes",
+            _ => panic!(),
         }
     }
 }
@@ -102,9 +105,10 @@ impl TryFrom<&HashMap<String, String>> for SortingParams {
             Some(m) => match m.as_str() {
                 "date" => SortMethod::Date,
                 "vote" => SortMethod::Vote,
+                "popular" => SortMethod::Popular,
                 _ => return Err(AppError::InvalidInput("invalid sorting method".to_string())),
             },
-            None => SortMethod::Date,
+            None => SortMethod::Popular,
         };
         let sort_order = match value.get("sort_order") {
             Some(o) => match o.as_str() {

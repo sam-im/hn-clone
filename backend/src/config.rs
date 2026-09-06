@@ -21,6 +21,9 @@ pub const SESSION_CHANNEL_CAPACITY: usize = 256;
 pub const SESSION_CHANNEL_TIMEOUT: Duration = Duration::from_secs(5);
 pub const POST_TITLE_LEN: usize = 256;
 pub const POST_CONTENT_LEN: usize = 2048;
+pub const POPULAR_POSTS_UPDATE_INTERVAL: Duration = Duration::from_hours(1);
+pub const POPULAR_POSTS_CHANNEL_CAPACITY: usize = 256;
+pub const POPULAR_POSTS_CHANNEL_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(Clone)]
 pub struct Config {
