@@ -2,10 +2,28 @@
   :version "0.0.1"
   :author "sam"
   :license "GPL-3.0-or-later"
-  :depends-on ()
+  :depends-on ("woo"                    ; http server
+               "ningle"                 ; (micro) web framework
+               "com.inuoe.jzon"         ; json reader/writer
+               "dexador"                ; http client
+               "spinneret"              ; html templating
+               "lack")
   :components ((:module "src"
                 :components
-                ((:file "main"))))
+                ((:file "dto")
+                 (:module "template"
+                  :components ((:file "template")
+                               (:file "login")
+                               (:file "register")))
+                 (:module "service"
+                  :components ((:file "service")
+                               (:file "user")))
+                 (:module "handler"
+                  :components ((:file "handler")
+                               (:file "login")
+                               (:file "register")))
+                 (:file "server")
+                 (:file "main"))))
   :description ""
   :in-order-to ((test-op (test-op "frontend/tests"))))
 
