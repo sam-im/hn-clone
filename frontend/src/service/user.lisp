@@ -19,13 +19,15 @@
                          :headers '(("Content-Type" . "application/json"))
                          :content request-body))
       (dex:http-request-failed (c)
-        (error 'backend-error :message (gethash "error_message" (parse (dex:response-body c))))))))
+        (error 'backend-error :status (dex:response-status c)
+                              :message (gethash "error_message" (parse (dex:response-body c))))))))
 
 (defun logout (token)
   (handler-case
       (dex:delete (format nil "~a/session/~a" service:*backend-url* token))
     (dex:http-request-failed (c)
-      (error 'backend-error :message (gethash "error_message" (parse (dex:response-body c)))))))
+      (error 'backend-error :status (dex:response-status c)
+                            :message (gethash "error_message" (parse (dex:response-body c)))))))
 
 (defun register (form)
   (let ((request-body (stringify form)))
@@ -34,4 +36,5 @@
                   :headers '(("Content-Type" . "application/json"))
                   :content request-body)
       (dex:http-request-failed (c)
-        (error 'backend-error :message (gethash "error_message" (parse (dex:response-body c))))))))
+        (error 'backend-error :status (dex:response-status c)
+                              :message (gethash "error_message" (parse (dex:response-body c))))))))

@@ -4,8 +4,12 @@
   (:export #:set-status
            #:set-header
            #:set-cookie
-           #:set-body
-           #:get-cookie))
+           #:set-body)
+  (:export #:get-cookie)
+  (:export #:report-error
+           #:report-auth-error)
+  (:export #:redirect)
+  (:export #:with-error-handler))
 
 (in-package #:frontend.handler)
 
@@ -45,3 +49,26 @@ Returns NIL."
 (defmacro get-cookie (name)
   "Retrieve the cookie specified by NAME."
   `(cdr (assoc ,name (lack.request:request-cookies ningle:*request*) :test #'string=)))
+
+(defmacro report-error ((&key title message) &body body)
+  `(progn (set-status 200)
+          (set-header :content "text/html; charset=utf-8")
+          (set-body (template:with-page (:title ,title)
+                      (template:render-error-message ,message)
+                      ,@body))))
+
+(defmacro report-auth-error (message)
+  `(report-error (:title "Login" :message ,message)
+     (frontend.template.login:render-login-form)))
+
+(defmacro redirect (path)
+  `(progn (set-status 303)
+          (set-header :location ,path)))
+
+(defmacro with-error-handler (&body body)
+  `(handler-case
+       (progn ,@body)
+     (error (c)
+       (declare (ignore c))             ; TODO: impl. a nested handler for printing a condition
+       (report-error (:title "Internal Server Error"
+                      :message "An unhandled error has occured.")))))
