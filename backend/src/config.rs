@@ -30,6 +30,8 @@ pub const POPULAR_POSTS_UPDATE_INTERVAL: Duration = Duration::from_hours(1);
 pub const POPULAR_POSTS_CHANNEL_CAPACITY: usize = 256;
 pub const POPULAR_POSTS_CHANNEL_TIMEOUT: Duration = Duration::from_secs(5);
 
+pub const PAGINATION_LIMITS: &[u32] = &[20, 50, 100];
+
 #[derive(Clone)]
 pub struct Config {
     pub server_addr: IpAddr,

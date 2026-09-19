@@ -7,7 +7,10 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{AppError, AppResult};
+use crate::{
+    config,
+    error::{AppError, AppResult},
+};
 
 pub trait Validate {
     fn validate(&self) -> AppResult;
@@ -47,9 +50,18 @@ impl TryFrom<&HashMap<String, String>> for PaginationParams {
             None => 0,
         };
         let limit = match value.get("limit") {
-            Some(l) => l
-                .parse::<u32>()
-                .map_err(|e| AppError::InvalidInput(e.to_string()))?,
+            Some(l) => {
+                let l = l
+                    .parse::<u32>()
+                    .map_err(|e| AppError::InvalidInput(e.to_string()))?;
+                if !(config::PAGINATION_LIMITS.contains(&l)) {
+                    return Err(AppError::InvalidInput(format!(
+                        "limit must be one of {:?}",
+                        config::PAGINATION_LIMITS
+                    )));
+                }
+                l
+            }
             None => 20,
         };
         Ok(Self { offset, limit })

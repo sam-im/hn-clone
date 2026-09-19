@@ -27,9 +27,10 @@ impl Validate for SessionRequest {
         validate_password(&self.password)?;
 
         if !(SESSION_DURATIONS.contains(&self.duration)) {
-            return Err(AppError::InvalidInput(
-                "duration must be one of {DURATIONS:?} minutes".to_string(),
-            ));
+            return Err(AppError::InvalidInput(format!(
+                "duration must be one of {:?} minutes",
+                SESSION_DURATIONS
+            )));
         }
         Ok(())
     }
