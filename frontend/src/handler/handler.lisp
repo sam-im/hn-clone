@@ -69,6 +69,10 @@ Returns NIL."
   `(handler-case
        (progn ,@body)
      (error (c)
-       (declare (ignore c))             ; TODO: impl. a nested handler for printing a condition
-       (report-error (:title "Internal Server Error"
-                      :message "An unhandled error has occured.")))))
+       (let* ((error-message (handler-case (princ-to-string c)
+                               (error () "<Unable to print condition>")))
+              (message (format nil "An unhandled error has occured: ~a" error-message)))
+         (print message)
+         (report-error (:title "Internal Server Error"
+                        :message message))))))
+       

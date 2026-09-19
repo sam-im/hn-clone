@@ -14,14 +14,17 @@
                  (:module "template"
                   :components ((:file "template")
                                (:file "login")
-                               (:file "register")))
+                               (:file "register")
+                               (:file "post")))
                  (:module "service"
                   :components ((:file "service")
-                               (:file "user")))
+                               (:file "user")
+                               (:file "post")))
                  (:module "handler"
                   :components ((:file "handler")
                                (:file "login")
-                               (:file "register")))
+                               (:file "register")
+                               (:file "post")))
                  (:file "server")
                  (:file "main"))))
   :description ""
