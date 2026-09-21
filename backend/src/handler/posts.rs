@@ -7,7 +7,10 @@ use axum::{
 };
 
 use crate::{
-    dto::{PaginationParams, PaginationResponse, SortingParams, post::PostResponse},
+    dto::{
+        PaginationParams, PaginationResponse,
+        post::{PostResponse, SortingParams},
+    },
     error::AppResult,
     server::state::AppState,
     service::posts::retrieve_posts,

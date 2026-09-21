@@ -33,12 +33,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let router = create_router(state);
 
     let listener =
-        tokio::net::TcpListener::bind(format!("{}:{}", &config.server_addr, &config.server_port))
+        tokio::net::TcpListener::bind(format!("{}:{}", config.server_addr, config.server_port))
             .await?;
-    info!(
-        "Listening on {}:{}",
-        &config.server_addr, &config.server_port
-    );
+    info!("Listening on {}:{}", config.server_addr, config.server_port);
     axum::serve(listener, router).await?;
     Ok(())
 }

@@ -14,7 +14,7 @@ use tracing::info;
 use crate::{
     dto::{
         PaginationParams, PaginationResponse, Validate,
-        comment::{CommentResponse, NewCommentRequest},
+        comment::{CommentResponse, NewCommentRequest, SortBy},
     },
     error::AppResult,
     server::{session::verify_session, state::AppState},
@@ -54,8 +54,9 @@ pub async fn get_replies(
     Query(params): Query<HashMap<String, String>>,
 ) -> AppResult<(StatusCode, Json<PaginationResponse<CommentResponse>>)> {
     let pagination = PaginationParams::try_from(&params)?;
+    let sort_by = SortBy::try_from(&params)?;
 
-    match retrieve_replies(state, id, pagination).await {
+    match retrieve_replies(state, id, pagination, sort_by).await {
         Ok(resp) => Ok((StatusCode::OK, Json(resp))),
         Err(e) => Err(e),
     }

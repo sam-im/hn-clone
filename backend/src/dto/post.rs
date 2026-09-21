@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
@@ -52,6 +54,50 @@ impl Validate for NewPostRequest {
             ));
         }
         Ok(())
+    }
+}
+
+pub enum SortMethod {
+    Date,
+    Vote,
+    Popular,
+}
+
+pub enum SortOrder {
+    Asc,
+    Desc,
+}
+
+pub struct SortingParams {
+    pub sort_by: SortMethod,
+    pub sort_order: SortOrder,
+}
+
+impl TryFrom<&HashMap<String, String>> for SortingParams {
+    type Error = AppError;
+
+    fn try_from(value: &HashMap<String, String>) -> Result<Self, Self::Error> {
+        let sort_by = match value.get("sort_by") {
+            Some(m) => match m.as_str() {
+                "date" => SortMethod::Date,
+                "vote" => SortMethod::Vote,
+                "popular" => SortMethod::Popular,
+                _ => return Err(AppError::InvalidInput("invalid sorting method".to_string())),
+            },
+            None => SortMethod::Popular,
+        };
+        let sort_order = match value.get("sort_order") {
+            Some(o) => match o.as_str() {
+                "asc" => SortOrder::Asc,
+                "desc" => SortOrder::Desc,
+                _ => return Err(AppError::InvalidInput("invalid sorting order".to_string())),
+            },
+            None => SortOrder::Desc,
+        };
+        Ok(Self {
+            sort_by,
+            sort_order,
+        })
     }
 }
 

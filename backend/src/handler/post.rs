@@ -14,7 +14,7 @@ use tracing::warn;
 use crate::{
     dto::{
         PaginationParams, PaginationResponse, Validate,
-        comment::CommentResponse,
+        comment::{CommentResponse, SortBy},
         post::{NewPostRequest, PostResponse},
     },
     error::AppResult,
@@ -55,8 +55,9 @@ pub async fn get_comments(
     Query(params): Query<HashMap<String, String>>,
 ) -> AppResult<(StatusCode, Json<PaginationResponse<CommentResponse>>)> {
     let pagination = PaginationParams::try_from(&params)?;
+    let sort_by = SortBy::try_from(&params)?;
 
-    match retrieve_comments(state, id, pagination).await {
+    match retrieve_comments(state, id, pagination, sort_by).await {
         Ok(resp) => Ok((StatusCode::OK, Json(resp))),
         Err(e) => Err(e),
     }

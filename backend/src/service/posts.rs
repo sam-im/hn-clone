@@ -1,6 +1,9 @@
 use crate::{
     client::db::Database,
-    dto::{PaginationParams, PaginationResponse, SortMethod, SortingParams, post::PostResponse},
+    dto::{
+        PaginationParams, PaginationResponse,
+        post::{PostResponse, SortMethod, SortOrder, SortingParams},
+    },
     error::AppResult,
     server::state::AppState,
 };
@@ -12,12 +15,21 @@ pub async fn retrieve_posts(
 ) -> AppResult<PaginationResponse<PostResponse>> {
     let db = state.db.get().await?;
 
-    if let SortMethod::Popular = sorting.sort_by {
-        let posts = state.popular_posts.get(&pagination).await?;
-        return Ok(posts);
-    }
+    let sort_by = match sorting.sort_by {
+        SortMethod::Date => "_item._created_at",
+        SortMethod::Vote => "_upvotes",
+        SortMethod::Popular => {
+            let posts = state.popular_posts.get(&pagination).await?;
+            return Ok(posts);
+        }
+    };
 
-    // SAFETY: both `to_sql_str(&self)` return a &'static str
+    let sort_order = match sorting.sort_order {
+        SortOrder::Asc => "ASC",
+        SortOrder::Desc => "DESC",
+    };
+
+    // SAFETY: both `sort_by` and `sort_order` are &'static str
     let raw_stmt = format!(
         "SELECT
             _item._id AS _id,
@@ -40,8 +52,7 @@ pub async fn retrieve_posts(
             INNER JOIN _user ON _user._id = _item._owner
         ORDER BY {} {}, _item._created_at DESC
         LIMIT $1 OFFSET $2;",
-        sorting.sort_by.to_sql_str(),
-        sorting.sort_order.to_sql_str()
+        sort_by, sort_order
     );
     let stmt = db.prepare_cached(&raw_stmt).await?;
     let rows = db
@@ -118,7 +129,7 @@ pub async fn popular_posts(
         )
         .await?
         .iter()
-        .map(|r| PostResponse::from(r))
+        .map(PostResponse::from)
         .collect::<Vec<PostResponse>>();
 
     let offset = if posts.len() == pagination.limit as usize {

@@ -3,7 +3,7 @@ use deadpool_postgres::Object;
 use crate::{
     dto::{
         PaginationParams, PaginationResponse,
-        comment::{CommentResponse, NewCommentRequest},
+        comment::{CommentResponse, NewCommentRequest, SortBy},
     },
     error::{AppError, AppResult},
     server::{session::Session, state::AppState},
@@ -61,8 +61,9 @@ pub async fn retrieve_replies(
     state: AppState,
     id: i32,
     pagination: PaginationParams,
+    sort_by: SortBy,
 ) -> AppResult<PaginationResponse<CommentResponse>> {
-    retrieve_comments_by_parent(state, id, pagination).await
+    retrieve_comments_by_parent(state, id, pagination, sort_by).await
 }
 
 async fn query_comment(db: &Object, id: i32) -> AppResult<CommentResponse> {

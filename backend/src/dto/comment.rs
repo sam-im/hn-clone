@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
@@ -37,6 +39,27 @@ impl Validate for NewCommentRequest {
             ));
         }
         Ok(())
+    }
+}
+
+pub enum SortBy {
+    Newest,
+    Oldest,
+}
+
+impl TryFrom<&HashMap<String, String>> for SortBy {
+    type Error = AppError;
+
+    fn try_from(value: &HashMap<String, String>) -> Result<Self, Self::Error> {
+        let sort_by = match value.get("sort_by") {
+            Some(s) => match s.as_str() {
+                "oldest" => SortBy::Oldest,
+                "newest" => SortBy::Newest,
+                _ => return Err(AppError::InvalidInput("invalid sorting method".to_string())),
+            },
+            None => SortBy::Oldest,
+        };
+        Ok(sort_by)
     }
 }
 
