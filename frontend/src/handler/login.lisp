@@ -22,6 +22,7 @@
     (set-body (template:with-page (:title "Login")
                 (render-login-form)))))
 
+;; TODO: accept an optional parameter for a return page/location
 (defparameter *post-login*
   (lambda (params)
     (handler:with-error-handler

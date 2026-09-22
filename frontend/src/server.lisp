@@ -11,6 +11,9 @@
                 #:*get-post*
                 #:*get-new-post*
                 #:*post-post*)
+  (:import-from :frontend.handler.comment
+                #:*get-comment*
+                #:*post-comment*)
   (:export #:make-app))
 
 (in-package #:frontend.server)
@@ -26,6 +29,8 @@
     (setf (ningle:route app "/post/:id") *get-post*)
     (setf (ningle:route app "/new-post") *get-new-post*)
     (setf (ningle:route app "/post" :method :post) *post-post*)
+    (setf (ningle:route app "/comment/:id") *get-comment*)
+    (setf (ningle:route app "/comment" :method :post) *post-comment*)
     (lack:builder
      (:static :path "/static/" :root (asdf:system-relative-pathname :frontend "static/"))
      app)))

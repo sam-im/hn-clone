@@ -15,16 +15,19 @@
                   :components ((:file "template")
                                (:file "login")
                                (:file "register")
-                               (:file "post")))
+                               (:file "post")
+                               (:file "comment")))
                  (:module "service"
                   :components ((:file "service")
                                (:file "user")
-                               (:file "post")))
+                               (:file "post")
+                               (:file "comment")))
                  (:module "handler"
                   :components ((:file "handler")
                                (:file "login")
                                (:file "register")
-                               (:file "post")))
+                               (:file "post")
+                               (:file "comment")))
                  (:file "server")
                  (:file "main"))))
   :description ""

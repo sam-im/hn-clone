@@ -13,6 +13,7 @@
   (with-html
     ;; post
     (:article
+     :id (format nil "post-~a" (gethash "id" post))
      (:h3 (gethash "title" post))
      (:div
       (gethash "content" post))
@@ -36,8 +37,9 @@
         :style "border: none; background: none; margin: 0; padding: 0;"
         (:summary :style "font-weight: normal;" "Write a comment")
         (:form
-         :action "/TODO" :method "post"
+         :action "/comment" :method "post"
          (:input :type "hidden" :name "parent" :value (gethash "id" post))
+         (:input :type "hidden" :name "parent-type" :value "post")
          (:textarea :name "content" :rows "3" :required t)
          (:button :type "submit" "Submit"))))))
     ;; comments
@@ -46,10 +48,13 @@
      (:div
       :style "display: flex; align-items: baseline; gap: 1rem;"
       (:h5 :style "margin: 0;" "Comments")
-      (:a :href (format nil "/post/~a" (gethash "id" post)) :style "font-size: 0.85rem;" "Newest"))
+      (:a :href (format nil "/post/~a" (gethash "id" post)) :style "font-size: 0.85rem;" "Oldest")
+      (:a :href (format nil "/post/~a?sort-by=newest" (gethash "id" post))
+          :style "font-size: 0.85rem;" "Newest"))
      (:div
       (dolist (comment (coerce (gethash "data" comments) 'list))
         (:div
+         :id (format nil "comment-~a" (gethash "id" comment))
          :style "border-bottom: var(--border-width) solid var(--border); padding-bottom: 1rem;"
          (:p (gethash "content" comment))
          (:div
@@ -69,14 +74,16 @@
             (:span (format nil "~a upvotes" (gethash "upvotes" comment))))
            (:div
             :style "padding-left: 1rem;"
-            (:a :href "/TODO" (format nil "~a replies" (gethash "replies" comment)))))
+            (:a :href (format nil "/comment/~a" (gethash "id" comment))
+                (format nil "~a replies" (gethash "replies" comment)))))
           (:div
            (:details
             :style "border: none; background: none; margin: 0; padding: 0;"
             (:summary :style "font-weight: normal;" "Reply")
             (:form
-             :action "/TODO" :method "post"
+             :action "/comment" :method "post"
              (:input :type "hidden" :name "parent" :value (gethash "id" comment))
+             (:input :type "hidden" :name "parent-type" :value "comment")
              (:textarea :name "content" :rows "3" :required t)
              (:button :type "submit" "Submit"))))))))
      ;; pagination

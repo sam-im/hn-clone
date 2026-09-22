@@ -5,6 +5,7 @@
 
 (in-package #:frontend.template.login)
 
+;; TODO: add an optional hidden input element for a return page
 (defun render-login-form ()
   (with-html
     (:fieldset

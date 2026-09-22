@@ -12,7 +12,16 @@
   (:export #:pagination-params
            #:pagination-params-limit
            #:pagination-params-offset
-           #:params->pagination-params))
+           #:params->pagination-params)
+  (:export #:params->comment-id)
+  (:export #:params->comment-parent-type)
+  (:export #:comment-params
+           #:comment-params-parent
+           #:comment-params-content
+           #:params->comment-params)
+  (:export #:sort-params
+           #:sort-params-sort-by
+           #:params->sort-params))
 
 (in-package :frontend.dto)
 
@@ -89,3 +98,44 @@ otherwise signals a BAD-INPUT condition."
                       (parse-integer limit-str :junk-allowed t))
                     20)))
     (make-pagination-params :offset offset :limit limit)))
+
+(defun params->comment-id (params)
+  (let* ((id-str (cdr (assoc :id params)))
+         (id (when id-str
+               (parse-integer id-str :junk-allowed t))))
+    (unless id
+      (error 'bad-input :reason "Missing comment id."))
+    id))
+
+(defun params->comment-parent-type (params)
+  (let ((parent-type (cdr (assoc "parent-type" params :test #'string=))))
+    (unless (or (string= "post" parent-type)
+                (string= "comment" parent-type))
+      (error 'bad-input :reason "Missing or bad parent type."))
+    parent-type))
+
+(defstruct comment-params
+  (parent nil :type integer)
+  (content nil :type string))
+
+(defun params->comment-params (params)
+  (let* ((parent-str (cdr (assoc "parent" params :test #'string=)))
+         (parent (when parent-str
+                   (parse-integer parent-str :junk-allowed t)))
+         (content (cdr (assoc "content" params :test #'string=))))
+    (unless parent
+      (error 'bad-input :reason "Missing parent id."))
+    (unless content
+      (error 'bad-input :reason "Missing content."))
+    (make-comment-params :parent parent :content content)))
+
+(defstruct sort-params
+  (sort-by nil :type string))
+
+(defun params->sort-params (params)
+  (let ((sort-by (or (cdr (assoc "sort-by" params :test #'string=))
+                     "oldest")))
+    (unless (or (string= "oldest" sort-by)
+                (string= "newest" sort-by))
+      (error 'bad-input :reason "Bad parameter for sort-by."))
+    (make-sort-params :sort-by sort-by)))
