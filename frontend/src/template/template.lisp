@@ -6,7 +6,9 @@
                 #:with-html-string)
   (:export #:with-page
            #:render-error-message)
-  (:export #:unix-to-timestamp))
+  (:export #:unix-to-timestamp)
+  (:export #:render-upvotes
+           #:render-pagination))
 
 (in-package #:frontend.template)
 
@@ -51,3 +53,33 @@ The second value is a human-readable timestamp."
      (format nil "~4,'0d-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d"
              year month day hour minute second)
      (format nil "~2,'0d/~2,'0d/~4,'0d ~2,'0d:~2,'0d" day month year hour minute))))
+
+(defun render-upvotes (id upvote-count)
+  (with-html
+   (:div
+    :style "display: inline-block; padding-left: 1rem;"
+    (:form
+     :action (format nil "/upvote/~a" id) :method "post"
+     :style "display: inline;"
+     (:button :type "submit"
+              :style "background: none; border: 0; color: var(--accent); padding: 0; margin: 0;
+                 text-decoration: underline; cursor: pointer;" "▲"))
+    (:span " ")
+    (:span (format nil "~a upvotes" upvote-count)))))
+
+(defun render-pagination (offset resource-url)
+  (with-html
+   (:div
+    :style "padding-top: 1rem;"
+    (if (or (eq 'null offset) (null offset))
+        (:p :style "font-style: italic;" "You have reached the end.")
+       (:form
+          :action resource-url :method "get"
+          :style "display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;"
+          (:label :for "limit" :style "display: inline;" "Items per page:")
+          (:select :name "limit" :style "width: auto;"
+             (:option :selected t :value 20 "20")
+             (:option :value 50 "50")
+             (:option :value 100 "100"))
+          (:input :type "hidden" :name "offset" :value offset)
+          (:button :type "submit" "Load more"))))))

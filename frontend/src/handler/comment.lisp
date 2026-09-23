@@ -18,7 +18,7 @@
   (lambda (params)
     (handler:with-error-handler
       (handler-case
-          (let* ((id (dto:params->comment-id params))
+          (let* ((id (dto:params->id params))
                  (comment (retrieve-comment id))
                  (pagination (dto:params->pagination-params params))
                  (sorting (dto:params->sort-params params))

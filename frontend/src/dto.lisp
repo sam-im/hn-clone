@@ -3,9 +3,9 @@
   (:use #:cl)
   (:export #:bad-input
            #:bad-input-reason)
+  (:export #:params->id)
   (:export #:params->login-params
            #:params->register-params)
-  (:export #:params->post-id)
   (:export #:post-params-title
            #:post-params-content
            #:params->post-params)
@@ -13,7 +13,6 @@
            #:pagination-params-limit
            #:pagination-params-offset
            #:params->pagination-params)
-  (:export #:params->comment-id)
   (:export #:params->comment-parent-type)
   (:export #:comment-params
            #:comment-params-parent
@@ -29,6 +28,16 @@
   ((reason :initarg :reason
            :initform nil
            :reader bad-input-reason)))
+
+(defun params->id (params)
+  "Returns an integer representing an item id from PARAMS if it exists,
+otherwise signals a BAD-INPUT condition."
+  (let* ((id-str (cdr (assoc :id params)))
+         (id (when id-str
+               (parse-integer id-str :junk-allowed t))))
+    (unless id
+      (error 'bad-input :reason "Missing ID."))
+    id))
 
 (defstruct login-params
   (username nil :type string)
@@ -62,17 +71,6 @@
       (error 'bad-input :reason "Passwords do not match."))
     (make-register-params :username username :password password)))
 
-(defun params->post-id (params)
-  "Extracts and returns a post id from the association list PARAMS.
-Returns an integer representing a post id if it exists,
-otherwise signals a BAD-INPUT condition."
-  (let* ((post-id-str (cdr (assoc :id params)))
-         (post-id (when post-id-str
-                    (parse-integer post-id-str :junk-allowed t))))
-    (unless post-id
-      (error 'bad-input :reason "Missing post ID."))
-    post-id))
-
 (defstruct post-params
   (title nil :type string)
   (content nil :type string))
@@ -98,14 +96,6 @@ otherwise signals a BAD-INPUT condition."
                       (parse-integer limit-str :junk-allowed t))
                     20)))
     (make-pagination-params :offset offset :limit limit)))
-
-(defun params->comment-id (params)
-  (let* ((id-str (cdr (assoc :id params)))
-         (id (when id-str
-               (parse-integer id-str :junk-allowed t))))
-    (unless id
-      (error 'bad-input :reason "Missing comment id."))
-    id))
 
 (defun params->comment-parent-type (params)
   (let ((parent-type (cdr (assoc "parent-type" params :test #'string=))))

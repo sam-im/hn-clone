@@ -19,7 +19,7 @@
   (lambda (params)
     (handler:with-error-handler
       (handler-case
-          (let* ((post-id (dto:params->post-id params))
+          (let* ((post-id (dto:params->id params))
                  (pagination (dto:params->pagination-params params))
                  (post (retrieve-post post-id))
                  (sorting (dto:params->sort-params params))

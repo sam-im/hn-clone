@@ -22,11 +22,7 @@
       (multiple-value-bind (datetime time)
           (unix-to-timestamp (gethash "created_at" comment))
         (:time :datetime datetime time))
-      (:div
-       :style "display: inline-block; padding-left: 1rem;"
-       (:a :href "/TODO" "▲")
-       (:span " ")
-       (:span (format nil "~a upvotes" (gethash "upvotes" comment))))
+      (template:render-upvotes (gethash "id" comment) (gethash "upvotes" comment))
       (:div
        :style "display: inline-block; padding-left: 1rem;"
        (:a :href "#reply-section" (format nil "~a replies" (gethash "replies" comment))))
@@ -65,11 +61,7 @@
             (multiple-value-bind (datetime time)
                 (unix-to-timestamp (gethash "created_at" reply))
               (:time :datetime datetime time)))
-           (:div
-            :style "padding-left: 1rem;"
-            (:a :href "/TODO" "▲")
-            (:span " ")
-            (:span (format nil "~a upvotes" (gethash "upvotes" reply))))
+           (template:render-upvotes (gethash "id" reply) (gethash "upvotes" reply))
            (:div
             :style "padding-left: 1rem;"
             (:a :href (format nil "/comment/~a" (gethash "id" reply))
@@ -84,17 +76,5 @@
              (:input :type "hidden" :name "parent-type" :value "comment")
              (:textarea :name "content" :rows "3" :required t)
              (:button :type "submit" "Submit"))))))))
-     (:div
-      :style "padding-top: 1rem;"
-      (if (eq 'null (gethash "offset" replies))
-          (:p :style "font-style: italic" "You have reached the end.")
-          (:form
-           :action (format nil "/comment/~a" (gethash "id" comment)) :method "get"
-           :style "display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;"
-           (:label :for "limit" :style "display: inline;" "Replies per page:")
-           (:select :name "limit" :style "width: auto;"
-             (:option :selected t :value 20 "20")
-             (:option :value 50 "50")
-             (:option :value 100 "100"))
-           (:input :type "hidden" :name "offset" :value (gethash "offset" replies))
-           (:button :type "submit" "Load more replies")))))))
+     (template:render-pagination (gethash "offset" replies)
+                                 (format nil "/comment/~a" (gethash "id" comment))))))

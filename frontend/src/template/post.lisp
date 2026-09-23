@@ -24,11 +24,7 @@
       (multiple-value-bind (datetime time)
           (unix-to-timestamp (gethash "created_at" post))
         (:time :datetime datetime time))
-      (:div
-       :style "display: inline-block; padding-left: 1rem;"
-       (:a :href "/TODO" "▲")
-       (:span " ")
-       (:span (format nil "~a upvotes" (gethash "upvotes" post))))
+      (template:render-upvotes (gethash "id" post) (gethash "upvotes" post))
       (:div
        :style "display: inline-block; padding-left: 1rem;"
        (:a :href "#comment-section" (format nil "~a comments" (gethash "comments" post))))
@@ -67,11 +63,7 @@
             (multiple-value-bind (datetime time)
                 (unix-to-timestamp (gethash "created_at" comment))
               (:time :datetime datetime time)))
-           (:div
-            :style "padding-left: 1rem;"
-            (:a :href "/TODO" "▲")
-            (:span " ")
-            (:span (format nil "~a upvotes" (gethash "upvotes" comment))))
+           (template:render-upvotes (gethash "id" comment) (gethash "upvotes" comment))
            (:div
             :style "padding-left: 1rem;"
             (:a :href (format nil "/comment/~a" (gethash "id" comment))
@@ -86,21 +78,8 @@
              (:input :type "hidden" :name "parent-type" :value "comment")
              (:textarea :name "content" :rows "3" :required t)
              (:button :type "submit" "Submit"))))))))
-     ;; pagination
-     (:div
-      :style "padding-top: 1rem;"
-      (if (eq 'null (gethash "offset" comments))
-          (:p :style "font-style: italic" "You have reached the end.")
-          (:form
-           :action (format nil "/post/~a" (gethash "id" post)) :method "get"
-           :style "display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;"
-           (:label :for "limit" :style "display: inline;" "Comments per page:")
-           (:select :name "limit" :style "width: auto;"
-             (:option :selected t :value 20 "20")
-             (:option :value 50 "50")
-             (:option :value 100 "100"))
-           (:input :type "hidden" :name "offset" :value (gethash "offset" comments))
-           (:button :type "submit" "Load more comments")))))))
+     (template:render-pagination (gethash "offset" comments)
+                                 (format nil "/post/~a" (gethash "id" post))))))
 
 (defun render-new-post (&optional title content)
   (with-html
