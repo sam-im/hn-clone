@@ -9,11 +9,11 @@
 
 (in-package #:frontend.template.post)
 
-(defun render-post (post comments)
+(defun render-post (post comments &optional current-page)
   (with-html
     ;; post
     (:article
-     :id (format nil "post-~a" (gethash "id" post))
+     :id (format nil "item-~a" (gethash "id" post))
      (:h3 (gethash "title" post))
      (:div
       (gethash "content" post))
@@ -24,7 +24,10 @@
       (multiple-value-bind (datetime time)
           (unix-to-timestamp (gethash "created_at" post))
         (:time :datetime datetime time))
-      (template:render-upvotes (gethash "id" post) (gethash "upvotes" post))
+      (template:render-upvotes (gethash "id" post)
+                               (gethash "upvotes" post)
+                               (or current-page
+                                   (format nil "/post/~a" (gethash "id" post))))
       (:div
        :style "display: inline-block; padding-left: 1rem;"
        (:a :href "#comment-section" (format nil "~a comments" (gethash "comments" post))))
@@ -50,7 +53,7 @@
      (:div
       (dolist (comment (coerce (gethash "data" comments) 'list))
         (:div
-         :id (format nil "comment-~a" (gethash "id" comment))
+         :id (format nil "item-~a" (gethash "id" comment))
          :style "border-bottom: var(--border-width) solid var(--border); padding-bottom: 1rem;"
          (:p (gethash "content" comment))
          (:div
@@ -63,7 +66,10 @@
             (multiple-value-bind (datetime time)
                 (unix-to-timestamp (gethash "created_at" comment))
               (:time :datetime datetime time)))
-           (template:render-upvotes (gethash "id" comment) (gethash "upvotes" comment))
+           (template:render-upvotes (gethash "id" comment)
+                                    (gethash "upvotes" comment)
+                                    (or current-page
+                                        (format nil "/post/~a" (gethash "id" post))))
            (:div
             :style "padding-left: 1rem;"
             (:a :href (format nil "/comment/~a" (gethash "id" comment))

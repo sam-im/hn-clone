@@ -20,7 +20,11 @@
            #:params->comment-params)
   (:export #:sort-params
            #:sort-params-sort-by
-           #:params->sort-params))
+           #:params->sort-params)
+  (:export #:vote-params
+           #:vote-params-id
+           #:vote-params-from
+           #:params->vote-params))
 
 (in-package :frontend.dto)
 
@@ -129,3 +133,18 @@ otherwise signals a BAD-INPUT condition."
                 (string= "newest" sort-by))
       (error 'bad-input :reason "Bad parameter for sort-by."))
     (make-sort-params :sort-by sort-by)))
+
+(defstruct vote-params
+  (id nil :type integer)
+  (from nil :type string))
+
+(defun params->vote-params (params)
+  (let* ((id-str (cdr (assoc "id" params :test #'string=)))
+         (id (when id-str
+               (parse-integer id-str :junk-allowed t)))
+         (from (cdr (assoc "from" params :test #'string=))))
+    (unless id
+      (error 'bad-input :reason "Missing id."))
+    (unless from
+      (error 'bad-input :reason "Missing from page."))
+    (make-vote-params :id id :from from)))

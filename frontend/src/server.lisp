@@ -14,6 +14,8 @@
   (:import-from :frontend.handler.comment
                 #:*get-comment*
                 #:*post-comment*)
+  (:import-from :frontend.handler.vote
+                #:*post-upvote*)
   (:export #:make-app))
 
 (in-package #:frontend.server)
@@ -31,6 +33,7 @@
     (setf (ningle:route app "/post" :method :post) *post-post*)
     (setf (ningle:route app "/comment/:id") *get-comment*)
     (setf (ningle:route app "/comment" :method :post) *post-comment*)
+    (setf (ningle:route app "/upvote" :method :post) *post-upvote*)
     (lack:builder
      (:static :path "/static/" :root (asdf:system-relative-pathname :frontend "static/"))
      app)))

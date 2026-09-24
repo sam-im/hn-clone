@@ -32,7 +32,13 @@
                                                 content
                                                 (subseq content 0 20))))
                            :userp (not (null (get-cookie "token"))))
-                        (render-comment comment replies))))
+                        (render-comment comment
+                                        replies
+                                        (format nil "/comment/~a?offset=~a&limit=~a&sort-by=~a"
+                                                id
+                                                (dto:pagination-params-offset pagination)
+                                                (dto:pagination-params-limit pagination)
+                                                (dto:sort-params-sort-by sorting))))))
         (dto:bad-input (c)
           (handler:report-error (:title "Comment Not Found" :message (dto:bad-input-reason c))))
         (service:backend-error (c)
@@ -50,7 +56,7 @@
                  (comment-params (dto:params->comment-params params))
                  (parent-type (dto:params->comment-parent-type params))
                  (comment (create-comment token comment-params)))
-            (handler:redirect (format nil "/~a/~a?sort-by=newest#comment-~a"
+            (handler:redirect (format nil "/~a/~a?sort-by=newest#item-~a"
                                       parent-type
                                       (gethash "parent" comment)
                                       (gethash "id" comment))))

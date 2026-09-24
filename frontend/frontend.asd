@@ -21,13 +21,15 @@
                   :components ((:file "service")
                                (:file "user")
                                (:file "post")
-                               (:file "comment")))
+                               (:file "comment")
+                               (:file "vote")))
                  (:module "handler"
                   :components ((:file "handler")
                                (:file "login")
                                (:file "register")
                                (:file "post")
-                               (:file "comment")))
+                               (:file "comment")
+                               (:file "vote")))
                  (:file "server")
                  (:file "main"))))
   :description ""

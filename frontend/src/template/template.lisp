@@ -54,13 +54,15 @@ The second value is a human-readable timestamp."
              year month day hour minute second)
      (format nil "~2,'0d/~2,'0d/~4,'0d ~2,'0d:~2,'0d" day month year hour minute))))
 
-(defun render-upvotes (id upvote-count)
+(defun render-upvotes (id upvote-count current-page)
   (with-html
    (:div
     :style "display: inline-block; padding-left: 1rem;"
     (:form
-     :action (format nil "/upvote/~a" id) :method "post"
+     :action "/upvote" :method "post"
      :style "display: inline;"
+     (:input :type "hidden" :name "id" :value id)
+     (:input :type "hidden" :name "from" :value current-page)
      (:button :type "submit"
               :style "background: none; border: 0; color: var(--accent); padding: 0; margin: 0;
                  text-decoration: underline; cursor: pointer;" "▲"))

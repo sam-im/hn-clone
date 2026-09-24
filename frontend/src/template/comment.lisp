@@ -8,10 +8,10 @@
 
 (in-package :frontend.template.comment)
 
-(defun render-comment (comment replies)
+(defun render-comment (comment replies &optional current-page)
   (with-html
     (:article
-     :id (format nil "comment-~a" (gethash "id" comment))
+     :id (format nil "item-~a" (gethash "id" comment))
      (:h5 "Comment")                    ; TODO: consider adding an indication of what the parent is
      (:div
       (gethash "content" comment))
@@ -22,7 +22,10 @@
       (multiple-value-bind (datetime time)
           (unix-to-timestamp (gethash "created_at" comment))
         (:time :datetime datetime time))
-      (template:render-upvotes (gethash "id" comment) (gethash "upvotes" comment))
+      (template:render-upvotes (gethash "id" comment)
+                               (gethash "upvotes" comment)
+                               (or current-page
+                                   (format nil "/comment/~a" (gethash "id" comment))))
       (:div
        :style "display: inline-block; padding-left: 1rem;"
        (:a :href "#reply-section" (format nil "~a replies" (gethash "replies" comment))))
@@ -48,7 +51,7 @@
      (:div
       (dolist (reply (coerce (gethash "data" replies) 'list))
         (:div
-         :id (format nil "comment-~a" (gethash "id" reply))
+         :id (format nil "item-~a" (gethash "id" reply))
          :style "border-bottom: var(--border-width) solid var(--border); padding-bottom: 1rem;"
          (:p (gethash "content" reply))
          (:div
@@ -61,7 +64,10 @@
             (multiple-value-bind (datetime time)
                 (unix-to-timestamp (gethash "created_at" reply))
               (:time :datetime datetime time)))
-           (template:render-upvotes (gethash "id" reply) (gethash "upvotes" reply))
+           (template:render-upvotes (gethash "id" reply)
+                                    (gethash "upvotes" reply)
+                                    (or current-page
+                                        (format nil "/comment/~a" (gethash "id" comment))))
            (:div
             :style "padding-left: 1rem;"
             (:a :href (format nil "/comment/~a" (gethash "id" reply))

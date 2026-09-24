@@ -28,7 +28,13 @@
             (set-header :content-type "text/html; charset=utf-8")
             (set-body (template:with-page (:title (gethash "title" post)
                                            :userp (not (null (get-cookie "token"))))
-                        (render-post post comments))))
+                        (render-post post
+                                     comments
+                                     (format nil "/post/~a?offset=~a&limit=~a&sort-by=~a"
+                                             post-id
+                                             (dto:pagination-params-offset pagination)
+                                             (dto:pagination-params-limit pagination)
+                                             (dto:sort-params-sort-by sorting))))))
         (dto:bad-input (c)
           (handler:report-error (:title "Post Not Found" :message (dto:bad-input-reason c))))
         (service:backend-error (c)
