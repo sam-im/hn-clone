@@ -16,7 +16,7 @@ pub async fn add_vote(state: AppState, session: Session, item_id: i32) -> AppRes
         Err(err) => {
             if let Some(db_err) = err.as_db_error() {
                 let app_err = match *db_err.code() {
-                    SqlState::UNIQUE_VIOLATION => AppError::ResourceNotModified,
+                    SqlState::UNIQUE_VIOLATION => AppError::ResourceExists,
                     SqlState::FOREIGN_KEY_VIOLATION => AppError::ResourceNotFound,
                     _ => AppError::Database(err),
                 };

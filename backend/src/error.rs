@@ -22,8 +22,6 @@ pub enum AppError {
     ResourceExists, // TODO: capture info about the resource
     #[error("resource not found")]
     ResourceNotFound, // TODO: capture info about the resource
-    #[error("resource not modified")]
-    ResourceNotModified, // TODO: capture info about the resource
     #[error("sessions error: {0}")]
     Session(String),
     #[error("auth error: {0}")]
@@ -103,12 +101,6 @@ impl AppError {
                 None,
                 vec![],
                 StatusCode::NOT_FOUND,
-            ),
-            AppError::ResourceNotModified => (
-                "RESOURCE_NOT_MODIFIED".to_string(),
-                None,
-                vec![],
-                StatusCode::NOT_MODIFIED,
             ),
         };
         (
