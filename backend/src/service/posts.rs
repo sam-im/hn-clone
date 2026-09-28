@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     client::db::Database,
     dto::{
@@ -19,7 +21,43 @@ pub async fn retrieve_posts(
         SortMethod::Date => "_item._created_at",
         SortMethod::Vote => "_upvotes",
         SortMethod::Popular => {
-            let posts = state.popular_posts.get(&pagination).await?;
+            let mut posts = state.popular_posts.get(&pagination).await?;
+            // update upvotes/comments as they may be at most an hour out of date.
+            let metadata = {
+                let stmt = db
+                    .prepare_cached(
+                        "SELECT
+                            _item._id AS _id,
+                            (
+                                SELECT COUNT(DISTINCT _upvote._user)
+                                FROM _upvote
+                                WHERE _upvote._item = _item._id
+                            ) AS _upvotes,
+                            (
+                                SELECT COUNT(*)
+                                FROM _comment
+                                WHERE _comment._parent = _item._id
+                            ) AS _comments
+                        FROM _item
+                        WHERE _item._id = ANY($1)",
+                    )
+                    .await?;
+
+                let ids = posts.data.iter().map(|p| p.id).collect::<Vec<i32>>();
+                let rows = db.query(&stmt, &[&ids]).await?;
+
+                rows.iter()
+                    .map(|r| (r.get("_id"), (r.get("_upvotes"), r.get("_comments"))))
+                    .collect::<HashMap<i32, (i64, i64)>>()
+            };
+
+            posts.data.iter_mut().for_each(|p| {
+                if let Some(&(upvotes, comments)) = metadata.get(&p.id) {
+                    p.upvotes = upvotes;
+                    p.comments = comments;
+                }
+            });
+
             return Ok(posts);
         }
     };
