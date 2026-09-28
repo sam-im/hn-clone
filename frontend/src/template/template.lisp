@@ -69,19 +69,21 @@ The second value is a human-readable timestamp."
     (:span " ")
     (:span (format nil "~a upvotes" upvote-count)))))
 
-(defun render-pagination (offset resource-url)
+(defun render-pagination (offset resource-url &optional other-parameters)
   (with-html
    (:div
     :style "padding-top: 1rem;"
     (if (or (eq 'null offset) (null offset))
         (:p :style "font-style: italic;" "You have reached the end.")
-       (:form
-          :action resource-url :method "get"
-          :style "display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;"
-          (:label :for "limit" :style "display: inline;" "Items per page:")
-          (:select :name "limit" :style "width: auto;"
-             (:option :selected t :value 20 "20")
-             (:option :value 50 "50")
-             (:option :value 100 "100"))
-          (:input :type "hidden" :name "offset" :value offset)
-          (:button :type "submit" "Load more"))))))
+        (:form
+         :action resource-url :method "get"
+         :style "display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;"
+         (:label :for "limit" :style "display: inline;" "Items per page:")
+         (:select :name "limit" :style "width: auto;"
+           (:option :selected t :value 20 "20")
+           (:option :value 50 "50")
+           (:option :value 100 "100"))
+         (:input :type "hidden" :name "offset" :value offset)
+         (dolist (parameter other-parameters)
+           (:input :type "hidden" :name (car parameter) :value (cdr parameter)))
+         (:button :type "submit" "Load more"))))))

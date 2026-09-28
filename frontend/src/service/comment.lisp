@@ -38,7 +38,7 @@
                               comment-id
                               (dto:pagination-params-offset pagination)
                               (dto:pagination-params-limit pagination)
-                              (dto:sort-params-sort-by sorting))))
+                              (dto:sort-comments-params-sort-by sorting))))
     (dex:http-request-failed (c)
       (error 'service:backend-error :status (dex:response-status c)
                                     :message (gethash "error_message"

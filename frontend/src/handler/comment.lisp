@@ -21,7 +21,7 @@
           (let* ((id (dto:params->id params))
                  (comment (retrieve-comment id))
                  (pagination (dto:params->pagination-params params))
-                 (sorting (dto:params->sort-params params))
+                 (sorting (dto:params->sort-comments-params params))
                  (replies (retrieve-replies id pagination sorting)))
             (set-status 200)
             (set-header :content-type "text/html; charset=utf-8")
@@ -38,7 +38,7 @@
                                                 id
                                                 (dto:pagination-params-offset pagination)
                                                 (dto:pagination-params-limit pagination)
-                                                (dto:sort-params-sort-by sorting))))))
+                                                (dto:sort-comments-params-sort-by sorting))))))
         (dto:bad-input (c)
           (handler:report-error (:title "Comment Not Found" :message (dto:bad-input-reason c))))
         (service:backend-error (c)

@@ -22,7 +22,7 @@
           (let* ((post-id (dto:params->id params))
                  (pagination (dto:params->pagination-params params))
                  (post (retrieve-post post-id))
-                 (sorting (dto:params->sort-params params))
+                 (sorting (dto:params->sort-comments-params params))
                  (comments (retrieve-comments post-id pagination sorting)))
             (set-status 200)
             (set-header :content-type "text/html; charset=utf-8")
@@ -34,7 +34,7 @@
                                              post-id
                                              (dto:pagination-params-offset pagination)
                                              (dto:pagination-params-limit pagination)
-                                             (dto:sort-params-sort-by sorting))))))
+                                             (dto:sort-comments-params-sort-by sorting))))))
         (dto:bad-input (c)
           (handler:report-error (:title "Post Not Found" :message (dto:bad-input-reason c))))
         (service:backend-error (c)

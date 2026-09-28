@@ -18,13 +18,17 @@
            #:comment-params-parent
            #:comment-params-content
            #:params->comment-params)
-  (:export #:sort-params
-           #:sort-params-sort-by
-           #:params->sort-params)
+  (:export #:sort-comments-params
+           #:sort-comments-params-sort-by
+           #:params->sort-comments-params)
   (:export #:vote-params
            #:vote-params-id
            #:vote-params-from
-           #:params->vote-params))
+           #:params->vote-params)
+  (:export #:sort-posts-params
+           #:sort-posts-params-sort-by
+           #:sort-posts-params-sort-order
+           #:params->sort-posts-params))
 
 (in-package :frontend.dto)
 
@@ -123,16 +127,16 @@ otherwise signals a BAD-INPUT condition."
       (error 'bad-input :reason "Missing content."))
     (make-comment-params :parent parent :content content)))
 
-(defstruct sort-params
+(defstruct sort-comments-params
   (sort-by nil :type string))
 
-(defun params->sort-params (params)
+(defun params->sort-comments-params (params)
   (let ((sort-by (or (cdr (assoc "sort-by" params :test #'string=))
                      "oldest")))
     (unless (or (string= "oldest" sort-by)
                 (string= "newest" sort-by))
       (error 'bad-input :reason "Bad parameter for sort-by."))
-    (make-sort-params :sort-by sort-by)))
+    (make-sort-comments-params :sort-by sort-by)))
 
 (defstruct vote-params
   (id nil :type integer)
@@ -148,3 +152,21 @@ otherwise signals a BAD-INPUT condition."
     (unless from
       (error 'bad-input :reason "Missing from page."))
     (make-vote-params :id id :from from)))
+
+(defstruct sort-posts-params
+  (sort-by nil :type string)
+  (sort-order nil :type string))
+
+(defun params->sort-posts-params (params)
+  (let ((sort-by (or (cdr (assoc "sort-by" params :test #'string=))
+                     "popular"))
+        (sort-order (or (cdr (assoc "sort-order" params :test #'string=))
+                        "desc")))
+    (unless (or (string= "popular" sort-by)
+                (string= "date" sort-by)
+                (string= "vote" sort-by))
+      (error 'bad-input :reason "Bad sort-by parameter."))
+    (unless (or (string= "desc" sort-order)
+                (string= "asc" sort-order))
+      (error 'bad-input :reason "Bad sort-order parameter."))
+    (make-sort-posts-params :sort-by sort-by :sort-order sort-order)))
