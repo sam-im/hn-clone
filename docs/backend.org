@@ -1,0 +1,200 @@
+#+title: Backend
+
+* API
+# source blocks require emacs-restclient
+# setup: use session/post below to create a new token and paste it in the source block below
+#+begin_src emacs-lisp
+(setq config (list (list "addr" "http://127.0.0.1:3000")
+                   (list "user" "testuser000")
+                   (list "pw" "testuser-000")
+                   (list "duration" 60)
+                   (list "token" "paste-session-token-here")))
+(defun config-get (key) (car (cdr (assoc key config))))
+(setq restclient-enable-eval t)
+#+end_src
+
+** user
+*** get
+#+begin_src restclient
+:addr := (config-get "addr")
+:user := (config-get "user")
+GET :addr/user/:user
+#+end_src
+
+*** post
+#+begin_src restclient
+:addr := (config-get "addr")
+:user := (config-get "user")
+:pw := (config-get "pw")
+
+POST :addr/user
+content-type: application/json
+
+{
+    "username": ":user",
+    "password": ":pw"
+}
+#+end_src
+
+*** patch
+#+begin_src restclient
+:addr := (config-get "addr")
+:user := (config-get "user")
+:token := (config-get "token")
+
+PATCH :addr/user/:user
+content-type: application/json
+authorization: Bearer :token
+
+{
+    "about": "Test user's test about section."
+}
+#+end_src
+
+** session
+*** get
+#+begin_src restclient
+:addr := (config-get "addr")
+:token := (config-get "token")
+
+GET :addr/session/:token
+#+end_src
+
+*** post
+#+begin_src restclient
+:addr := (config-get "addr")
+:username := (config-get "user")
+:password := (config-get "pw")
+:duration := (config-get "duration")
+
+POST :addr/session
+content-type: application/json
+
+{
+        "username": ":username",
+        "password": ":password",
+        "duration": :duration
+}
+#+end_src
+
+*** delete
+#+begin_src restclient
+:addr := (config-get "addr")
+:token := (config-get "token")
+
+DELETE :addr/session/:token
+#+end_src
+
+** post
+*** get
+#+begin_src restclient
+:addr := (config-get "addr")
+:id = 90
+
+GET :addr/post/:id
+#+end_src
+
+*** get comments
+query parameters:
+- =offset=: defaults to =0=
+- =limit=: defaults to =20=. one of =20=, =50=, or =100=
+- =sort_by=: =newest= or =oldest=, defaults to =oldest=
+
+#+begin_src restclient
+:addr := (config-get "addr")
+:id = 1
+
+GET :addr/post/:id/comments?offset=0&limit=20&sort_by=newest
+#+end_src
+
+*** post
+#+begin_src restclient
+:addr := (config-get "addr")
+:token := (config-get "token")
+:title = "another test post"
+:content = "another test post content"
+
+POST :addr/post
+content-type: application/json
+authorization: Bearer :token
+
+{
+        "title": :title,
+        "content": :content
+}
+#+end_src
+
+** comment
+*** get
+#+begin_src restclient
+:addr := (config-get "addr")
+:id = 78
+
+GET :addr/comment/:id
+#+end_src
+
+*** get replies
+query parameters:
+- =offset=: defaults to =0=
+- =limit=: defaults to =20=
+- =sort_by=: =newest= or =oldest=, defaults to =oldest=
+
+#+begin_src restclient
+:addr := (config-get "addr")
+:id = 78
+
+GET :addr/comment/:id/replies?offset=0&limit=20&sort_by=newest
+#+end_src
+
+*** post
+#+begin_src restclient
+:addr := (config-get "addr")
+:token := (config-get "token")
+
+POST :addr/comment
+content-type: application/json
+authorization: Bearer :token
+
+{
+        "parent": 78,
+        "content": "another test comment"
+}
+#+end_src
+
+** vote
+*** post
+#+begin_src restclient
+:addr := (config-get "addr")
+:token := (config-get "token")
+:item-id = 90
+
+POST :addr/vote/:item-id
+authorization: Bearer :token
+#+end_src
+
+*** delete
+#+begin_src restclient
+:addr := (config-get "addr")
+:token := (config-get "token")
+:item-id = 90
+
+DELETE :addr/vote/:item-id
+authorization: Bearer :token
+#+end_src
+
+** posts
+*** get
+query parameters:
+- =limit=: defaults to =20=
+- =offset=: defaults to =0=
+- =sort_by=: defaults to =date=, one of =date=, =vote=, =popular=
+- =sort_order=: defaults to =desc=, either =asc= or =desc=
+
+#+begin_src restclient
+:addr := (config-get "addr")
+
+GET :addr/posts
+# GET :addr/posts?limit=5&offset=20&sort_by=date&sort_order=asc
+# GET :addr/posts?sort_by=popular
+#+end_src
+
