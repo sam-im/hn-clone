@@ -32,7 +32,8 @@
                                (:file "post")
                                (:file "comment")
                                (:file "vote")
-                               (:file "posts")))
+                               (:file "posts")
+                               (:file "root")))
                  (:file "server")
                  (:file "main"))))
   :description ""

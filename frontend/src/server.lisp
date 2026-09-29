@@ -18,13 +18,15 @@
                 #:*post-upvote*)
   (:import-from #:frontend.handler.posts
                 #:*get-posts*)
+  (:import-from #:frontend.handler.root
+                #:*get-root*)
   (:export #:make-app))
 
 (in-package #:frontend.server)
 
 (defun make-app ()
   (let ((app (make-instance 'ningle:app)))
-    ;; (setf (ningle:route app "/") *get-root*)
+    (setf (ningle:route app "/") *get-root*)
     (setf (ningle:route app "/login") *get-login*)
     (setf (ningle:route app "/login" :method :post) *post-login*)
     (setf (ningle:route app "/logout") *get-logout*)
