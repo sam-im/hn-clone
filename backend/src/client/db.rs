@@ -1,4 +1,7 @@
-use crate::{config::Config, error::AppError};
+use crate::{
+    config::{Config, DB_POOL_SIZE},
+    error::AppError,
+};
 
 use std::error::Error;
 
@@ -22,7 +25,7 @@ impl Database {
             recycling_method: RecyclingMethod::Fast,
         };
         let mgr = Manager::from_config(pg_config, NoTls, mgr_config);
-        let pool = Pool::builder(mgr).max_size(config.db_pool_size).build()?;
+        let pool = Pool::builder(mgr).max_size(DB_POOL_SIZE).build()?;
         Ok(Self { inner: pool })
     }
 

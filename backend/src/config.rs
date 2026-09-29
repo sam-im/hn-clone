@@ -5,6 +5,8 @@ use std::time::Duration;
 
 use tracing::error;
 
+pub const DB_POOL_SIZE: usize = 16;
+
 pub const USERNAME_MIN_LEN: usize = 4;
 pub const USERNAME_MAX_LEN: usize = 36;
 pub const PASSWORD_MIN_LEN: usize = 8;
@@ -40,7 +42,6 @@ pub struct Config {
     pub db_name: String,
     pub db_user: String,
     pub db_pass: String,
-    pub db_pool_size: usize,
 }
 
 impl Config {
@@ -63,7 +64,6 @@ impl Config {
         let db_name = try_env_var("DB_NAME", None);
         let db_user = try_env_var("DB_USER", None);
         let db_pass = try_env_var("DB_PASS", None);
-        let db_pool_size = usize::from_str(try_env_var("DB_POOL_SIZE", Some("16")).as_ref())?;
         Ok(Self {
             server_addr,
             server_port,
@@ -71,7 +71,6 @@ impl Config {
             db_name,
             db_user,
             db_pass,
-            db_pool_size,
         })
     }
 }
