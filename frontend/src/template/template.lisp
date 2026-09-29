@@ -1,7 +1,7 @@
-(uiop:define-package frontend.template
-  (:nicknames template)
+(uiop:define-package #:frontend.template
+  (:nicknames #:template)
   (:use #:cl)
-  (:import-from :spinneret
+  (:import-from #:spinneret
                 #:with-html
                 #:with-html-string)
   (:export #:with-page

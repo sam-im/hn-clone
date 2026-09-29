@@ -1,6 +1,6 @@
-(uiop:define-package frontend.template.login
+(uiop:define-package #:frontend.template.login
   (:use #:cl)
-  (:import-from :spinneret #:with-html)
+  (:import-from #:spinneret #:with-html)
   (:export #:render-login-form))
 
 (in-package #:frontend.template.login)

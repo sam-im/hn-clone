@@ -1,5 +1,5 @@
-(uiop:define-package frontend.service
-  (:nicknames service)
+(uiop:define-package #:frontend.service
+  (:nicknames #:service)
   (:use #:cl)
   (:export #:*backend-url*)
   (:export #:backend-error

@@ -1,12 +1,12 @@
-(uiop:define-package frontend.template.comment
+(uiop:define-package #:frontend.template.comment
   (:use #:cl)
-  (:import-from :spinneret
+  (:import-from #:spinneret
                 #:with-html)
-  (:import-from :frontend.template
+  (:import-from #:frontend.template
                 #:unix-to-timestamp)
   (:export #:render-comment))
 
-(in-package :frontend.template.comment)
+(in-package #:frontend.template.comment)
 
 (defun render-comment (comment replies &optional current-page)
   (with-html

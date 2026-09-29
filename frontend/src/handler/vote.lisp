@@ -1,14 +1,14 @@
-(uiop:define-package frontend.handler.vote
+(uiop:define-package #:frontend.handler.vote
   (:use #:cl)
-  (:import-from :frontend.handler
+  (:import-from #:frontend.handler
                 #:get-cookie)
-  (:import-from :frontend.service.vote
+  (:import-from #:frontend.service.vote
                 #:create-vote
                 #:delete-vote
                 #:toggle-vote)
   (:export #:*post-upvote*))
 
-(in-package :frontend.handler.vote)
+(in-package #:frontend.handler.vote)
 
 (defparameter *post-upvote*
   (lambda (params)

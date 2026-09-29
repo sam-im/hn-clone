@@ -1,9 +1,9 @@
-(uiop:define-package frontend.service.user
+(uiop:define-package #:frontend.service.user
   (:use #:cl)
-  (:import-from :frontend.service
+  (:import-from #:frontend.service
                 #:backend-error
                 #:backend-error-message)
-  (:import-from :com.inuoe.jzon
+  (:import-from #:com.inuoe.jzon
                 #:stringify
                 #:parse)
   (:export #:login

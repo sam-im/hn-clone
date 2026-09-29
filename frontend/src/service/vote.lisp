@@ -1,12 +1,12 @@
-(uiop:define-package frontend.service.vote
+(uiop:define-package #:frontend.service.vote
   (:use #:cl)
-  (:import-from :com.inuoe.jzon
+  (:import-from #:com.inuoe.jzon
                 #:parse)
   (:export #:create-vote
            #:delete-vote
            #:toggle-vote))
 
-(in-package :frontend.service.vote)
+(in-package #:frontend.service.vote)
 
 (defun create-vote (token item-id)
   (handler-case

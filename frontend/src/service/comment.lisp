@@ -1,13 +1,13 @@
-(uiop:define-package frontend.service.comment
+(uiop:define-package #:frontend.service.comment
   (:use #:cl)
-  (:import-from :com.inuoe.jzon
+  (:import-from #:com.inuoe.jzon
                 #:stringify
                 #:parse)
   (:export #:create-comment
            #:retrieve-comment
            #:retrieve-replies))
 
-(in-package :frontend.service.comment)
+(in-package #:frontend.service.comment)
 
 (defun create-comment (token comment-params)
   ;; HACK: backend returns non-json body if token is missing

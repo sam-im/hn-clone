@@ -1,8 +1,8 @@
-(uiop:define-package frontend.template.post
+(uiop:define-package #:frontend.template.post
   (:use #:cl)
-  (:import-from :spinneret
+  (:import-from #:spinneret
                 #:with-html)
-  (:import-from :frontend.template
+  (:import-from #:frontend.template
                 #:unix-to-timestamp)
   (:export #:render-post
            #:render-new-post))

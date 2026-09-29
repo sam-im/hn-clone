@@ -1,6 +1,6 @@
-(uiop:define-package frontend.service.posts
+(uiop:define-package #:frontend.service.posts
   (:use #:cl)
-  (:import-from :com.inuoe.jzon
+  (:import-from #:com.inuoe.jzon
                 #:parse)
   (:export #:retrieve-posts))
 

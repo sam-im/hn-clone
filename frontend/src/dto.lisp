@@ -1,5 +1,5 @@
-(uiop:define-package frontend.dto
-  (:nicknames dto)
+(uiop:define-package #:frontend.dto
+  (:nicknames #:dto)
   (:use #:cl)
   (:export #:bad-input
            #:bad-input-reason)
@@ -30,7 +30,7 @@
            #:sort-posts-params-sort-order
            #:params->sort-posts-params))
 
-(in-package :frontend.dto)
+(in-package #:frontend.dto)
 
 (define-condition bad-input (error)
   ((reason :initarg :reason

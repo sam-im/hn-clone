@@ -1,18 +1,18 @@
-(uiop:define-package frontend.handler.comment
+(uiop:define-package #:frontend.handler.comment
   (:use #:cl)
-  (:import-from :frontend.handler
+  (:import-from #:frontend.handler
                 #:set-status #:set-header #:set-body
                 #:get-cookie)
-  (:import-from :frontend.service.comment
+  (:import-from #:frontend.service.comment
                 #:create-comment
                 #:retrieve-comment
                 #:retrieve-replies)
-  (:import-from :frontend.template.comment
+  (:import-from #:frontend.template.comment
                 #:render-comment)
   (:export #:*get-comment*
            #:*post-comment*))
 
-(in-package :frontend.handler.comment)
+(in-package #:frontend.handler.comment)
 
 (defparameter *get-comment*
   (lambda (params)

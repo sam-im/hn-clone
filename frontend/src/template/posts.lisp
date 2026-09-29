@@ -1,6 +1,6 @@
-(uiop:define-package frontend.template.posts
+(uiop:define-package #:frontend.template.posts
   (:use #:cl)
-  (:import-from :spinneret #:with-html)
+  (:import-from #:spinneret #:with-html)
   (:export #:render-posts))
 
 (in-package #:frontend.template.posts)

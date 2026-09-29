@@ -1,6 +1,6 @@
-(uiop:define-package frontend.template.register
+(uiop:define-package #:frontend.template.register
   (:use #:cl)
-  (:import-from :spinneret #:with-html)
+  (:import-from #:spinneret #:with-html)
   (:export #:render-register-form))
 
 (in-package #:frontend.template.register)

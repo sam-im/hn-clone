@@ -1,6 +1,6 @@
-(uiop:define-package frontend
+(uiop:define-package #:frontend
   (:use #:cl)
-  (:import-from :frontend.server #:make-app)
+  (:import-from #:frontend.server #:make-app)
   (:export #:main))
 (in-package #:frontend)
 

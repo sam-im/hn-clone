@@ -1,17 +1,17 @@
-(uiop:define-package frontend.handler.register
+(uiop:define-package #:frontend.handler.register
   (:use #:cl)
-  (:import-from :frontend.handler
+  (:import-from #:frontend.handler
                 #:set-status
                 #:set-header
                 #:set-body)
-  (:import-from :frontend.template.register
+  (:import-from #:frontend.template.register
                 #:render-register-form)
-  (:import-from :frontend.service.user
+  (:import-from #:frontend.service.user
                 #:register)
   (:export #:*get-register*
            #:*post-register*))
 
-(in-package :frontend.handler.register)
+(in-package #:frontend.handler.register)
 
 (defparameter *get-register*
   (lambda (params)

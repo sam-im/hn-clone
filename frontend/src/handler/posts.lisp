@@ -1,11 +1,11 @@
-(uiop:define-package frontend.handler.posts
+(uiop:define-package #:frontend.handler.posts
   (:use #:cl)
-  (:import-from :frontend.handler
+  (:import-from #:frontend.handler
                 #:set-status #:set-header #:set-body
                 #:get-cookie)
-  (:import-from :frontend.service.posts
+  (:import-from #:frontend.service.posts
                 #:retrieve-posts)
-  (:import-from :frontend.template.posts
+  (:import-from #:frontend.template.posts
                 #:render-posts)
   (:export #:*get-posts*))
 
