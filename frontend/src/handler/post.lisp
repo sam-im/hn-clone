@@ -47,10 +47,13 @@
 (defparameter *get-new-post*
   (lambda (params)
     (declare (ignore params))
-    (set-status 200)
-    (set-header :content-type "text/html; charset=utf-8")
-    (set-body (template:with-page (:title "New Post")
-                (render-new-post)))))
+    (if (null (get-cookie "token"))
+        (handler:report-auth-error "Login to post.")
+        (progn
+          (set-status 200)
+          (set-header :content-type "text/html; charset=utf-8")
+          (set-body (template:with-page (:title "New Post" :userp (not (null (get-cookie "token"))))
+                      (render-new-post)))))))
 
 (defparameter *post-post*
   (lambda (params)

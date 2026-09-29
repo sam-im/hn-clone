@@ -23,10 +23,12 @@
         (:option :selected (string= "desc" sort-order) :value "desc" "Descending")
         (:option :selected (string= "asc" sort-order) :value "asc" "Ascending"))
       (:button :type "submit" "Apply"))
-     (:a :class "button" :href "/new-post" "Create post"))
-    (:ol
+     (:a :class "button" :href "/post/new" "Create post"))
+    (:br)
+    (:ol :start (1+ offset)
      (dolist (post (coerce (gethash "data" posts) 'list))
        (:li
+        :style "padding-bottom: 1rem;"
         (:a :href (format nil "/post/~a" (gethash "id" post))
             :style "font-size: 1.5rem;" (gethash "title" post))
         (:br)

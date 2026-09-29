@@ -25,7 +25,7 @@
         (service:backend-error (c)
           (let ((status (service:backend-error-status c)))
             (if (= status 401)
-                (handler:report-auth-error (service:backend-error-message c))
+                (handler:report-auth-error "Login to vote.")
                 (handler:report-error (:title (if (= status 404)
                                                   "Item Not Found"
                                                   "Error")

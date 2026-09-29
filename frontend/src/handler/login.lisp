@@ -19,7 +19,7 @@
     (declare (ignore params))
     (set-status 200)
     (set-header :content-type "text/html; charset=utf-8")
-    (set-body (template:with-page (:title "Login")
+    (set-body (template:with-page (:title "Login" :userp (not (null (get-cookie "token"))))
                 (render-login-form)))))
 
 ;; TODO: accept an optional parameter for a return page/location
