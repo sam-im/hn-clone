@@ -8,6 +8,7 @@ use crate::{
 
 use super::{OptionalField, Validate, is_valid_charset, is_valid_len};
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 
@@ -61,6 +62,7 @@ pub struct UserResponse {
     pub username: String,
     pub about: Option<String>,
     pub pubkey: Option<String>,
+    pub created_at: i64,
 }
 
 impl From<&Row> for UserResponse {
@@ -68,11 +70,14 @@ impl From<&Row> for UserResponse {
         let username = value.get("_username");
         let about = value.get("_about");
         let pubkey = value.get("_public_key");
+        let created_at: DateTime<Utc> = value.get("_created_at");
+        let created_at = created_at.timestamp();
 
         Self {
             username,
             about,
             pubkey,
+            created_at,
         }
     }
 }

@@ -34,7 +34,15 @@ pub async fn register_user(state: AppState, req: RegisterUserRequest) -> AppResu
     transaction.commit().await?;
 
     let query_stmt = db
-        .prepare_cached("SELECT _username, _about, _public_key FROM _user WHERE _username = $1;")
+        .prepare_cached(
+            "SELECT
+                _username,
+                _about,
+                _public_key,
+                _created_at
+            FROM _user
+            WHERE _username = $1;",
+        )
         .await?;
     let row = db.query_one(&query_stmt, &[&req.username]).await?;
 
@@ -44,7 +52,15 @@ pub async fn register_user(state: AppState, req: RegisterUserRequest) -> AppResu
 pub async fn retrieve_user(state: AppState, username: &str) -> AppResult<UserResponse> {
     let db = state.db.get().await?;
     let statement = db
-        .prepare_cached("SELECT _username, _about, _public_key FROM _user WHERE _username = $1;")
+        .prepare_cached(
+            "SELECT
+                _username,
+                _about,
+                _public_key,
+                _created_at
+            FROM _user
+            WHERE _username = $1;",
+        )
         .await?;
 
     let rows = db.query(&statement, &[&username]).await?;
